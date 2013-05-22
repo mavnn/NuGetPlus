@@ -2,6 +2,7 @@
 open NuGet
 open ReferenceManagement
 open UnionArgParser
+
 type Argument =
     | [<MandatoryAttribute>] Action of string
     | [<MandatoryAttribute>] ProjectFile of string

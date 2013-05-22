@@ -50,6 +50,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="XmlTransformer.fs" />
     <Compile Include="ProjectSystem.fs" />
     <Compile Include="ReferenceManagement.fs" />
     <None Include="Script.fsx" />
