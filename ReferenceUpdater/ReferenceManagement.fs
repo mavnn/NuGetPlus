@@ -29,7 +29,7 @@ let GetManager (projectName : string) =
     packageManager
 
 
-let GetAssemblyReferences packageInstallPath (package : IPackage) (project : IProjectSystem) =
+let AddFilesToProj packageInstallPath (package : IPackage) (project : IProjectSystem) =
     let grabCompatible f name =
         match project.TryGetCompatibleItems(f ()) with
         | (true, result) -> result
@@ -62,10 +62,12 @@ let GetAssemblyReferences packageInstallPath (package : IPackage) (project : IPr
     let fileTransformers : IDictionary<string, IPackageFileTransformer> =
         dict [(".transform", XmlTransformer() :> IPackageFileTransformer);(".pp", Preprocessor() :> IPackageFileTransformer)]
     project.AddFiles(contentFiles, fileTransformers)
-    // Add references here
-    sanoteh
-
-
+    assemblyReferences
+    |> Seq.filter (fun a -> not <| a.IsEmptyFolder())
+    |> Seq.iter (fun a ->
+                        let refPath = Path.Combine(packageInstallPath, a.Path)
+                        if project.ReferenceExists(a.Name) then project.RemoveReference(a.Name)
+                        project.AddReference(refPath, Stream.Null))
 
 let UpdateReferenceToSpecificVersion projectName packageId (version : SemanticVersion) =
     let pm = GetManager projectName
@@ -75,16 +77,18 @@ let UpdateReference projectName (packageId : string) =
     let pm = GetManager projectName
     pm.UpdatePackage(packageId, true, false)
 
-let InstallReferenceOfSpecificVersion projectName packageId (version : SemanticVersion) =
+let private getInstallManager projectName =
     let manager = GetManager projectName
     let project = ProjectSystem(projectName) :> IProjectSystem
-    manager.PackageInstalling.Add(fun ev -> project.AddReference(Path.Combine(ev.InstallPath, ev.Package.Id), ev.Package.GetStream()))
+    manager.PackageInstalling.Add(fun ev -> AddFilesToProj ev.InstallPath ev.Package project)
+    manager
+
+let InstallReferenceOfSpecificVersion projectName packageId (version : SemanticVersion) =
+    let manager = getInstallManager projectName
     manager.InstallPackage(packageId, version, false, true)
 
 let InstallReference projectName packageId =
-    let manager = GetManager projectName
-    let project = ProjectSystem(projectName) :> IProjectSystem
-    manager.PackageInstalling.Add(fun ev -> project.AddReference(Path.Combine(ev.InstallPath, ev.Package.Id), ev.Package.GetStream()))
+    let manager = getInstallManager projectName
     manager.InstallPackage packageId
 
 
