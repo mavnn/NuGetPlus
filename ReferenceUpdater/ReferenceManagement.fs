@@ -11,7 +11,7 @@ let GetManager (projectName : string) =
     if String.IsNullOrWhiteSpace projectName then raise <| ArgumentException("projectName cannot be empty")
     let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
     let (settings : ISettings) = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
-    let repositoryPath = Path.Combine(projectDir, settings.GetValue("config", "repositoryPath"))
+    let repositoryPath = settings.GetRepositoryPath()
     printfn "repo path: %s" repositoryPath
     let defaultPackageSource = PackageSource "https://nuget.org/api/v2/"
     let packageSourceProvider = PackageSourceProvider (settings, [defaultPackageSource])
