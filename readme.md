@@ -10,7 +10,7 @@ This could be the wrapper for you, when it's finished.
 
 # Command line options available for NuGetPlus.exe
 
-    --action <string>: Specify an action: Install, Remove or Update
+    --action <string>: Specify an action: Install, Remove, Restore or Update
     --projectfile <string>: Path to project file to update.
     --packageid <string>: NuGet package id for action.
     --version <string>: Optional specific version of package.
@@ -19,4 +19,5 @@ Want to call them from code? Reference the dll and be amazed by the fact that th
 
 # This is very much pre-production
 
-Only the install command has been tested so far, and it doesn't always correctly interpret the config setting for package location.
+But most things should work. One caveat is that it requires a repositoryPath setting in a findable
+nuget.config (it loads settings files the same way as NuGet does).
