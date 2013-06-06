@@ -4,44 +4,91 @@ open System.Collections.Generic
 open System.IO
 open System.Linq
 open System.Text.RegularExpressions
+open System.Xml.Linq
 open NuGet
 open Microsoft.Build.Evaluation
 
-let GetManager (projectName : string) =
-    if String.IsNullOrWhiteSpace projectName then raise <| ArgumentException("projectName cannot be empty")
-    let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
-    let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
-    let repositoryPath = settings.GetRepositoryPath()
-    printfn "repo path: %s" repositoryPath
-    let defaultPackageSource = PackageSource "https://nuget.org/api/v2/"
-    let packageSourceProvider = PackageSourceProvider (settings, [defaultPackageSource])
-    let remoteRepository = packageSourceProvider.GetAggregate(PackageRepositoryFactory())
-    let logger = { new ILogger 
-                        with 
-                            member x.Log(level, message, parameters) = Console.WriteLine("[{0}] {1}", level.ToString(), String.Format(message, parameters))
-                            member x.ResolveFileConflict(message) = FileConflictResolution() }
-    let packageManager = PackageManager(
-                                            remoteRepository, 
-                                            DefaultPackagePathResolver(PhysicalFileSystem repositoryPath), 
-                                            PhysicalFileSystem repositoryPath,
-                                            PackageReferenceRepository(PhysicalFileSystem projectDir, SharedPackageRepository repositoryPath))
-    packageManager.Logger <- logger
-    packageManager
+let inline private grabCompatible (project : IProjectSystem) f name =
+    match project.TryGetCompatibleItems(f ()) with
+    | (true, result) -> result
+    | (false, _) -> Seq.empty
 
+let private getFilteredAssemblies (package : IPackage) (project : IProjectSystem) assemblyReferences =
+    match package.PackageAssemblyReferences with
+    | null -> assemblyReferences
+    | par ->
+        match project.TryGetCompatibleItems(par) with
+        | (true, items) ->
+            Seq.filter (fun (assembly : IPackageAssemblyReference) -> not <| Seq.exists (fun (pr : PackageReferenceSet) -> pr.References.Contains(assembly.Name, StringComparer.OrdinalIgnoreCase)) items) assemblyReferences
+        | (false, _) ->
+            assemblyReferences
 
-let AddFilesToProj packageInstallPath (package : IPackage) (project : IProjectSystem) =
-    let grabCompatible f name =
-        match project.TryGetCompatibleItems(f ()) with
-        | (true, result) -> result
-        | (false, _) -> failwith "Failed to get compatible %s." name
+let private fileTransformers : IDictionary<string, IPackageFileTransformer> =
+    dict [(".transform", XmlTransformer() :> IPackageFileTransformer);(".pp", Preprocessor() :> IPackageFileTransformer)]
+
+let private getFiles project (package : IPackage) =
     let assemblyReferences =
-        grabCompatible (fun () -> package.AssemblyReferences) "assembly references"
+        grabCompatible project (fun () -> package.AssemblyReferences) "assembly references"
     let frameworkReferences =
-        grabCompatible (fun () -> package.FrameworkAssemblies) "framework assemblies"
+        grabCompatible project (fun () -> package.FrameworkAssemblies) "framework assemblies"
     let contentFiles =
-        grabCompatible (package.GetContentFiles) "content files"
+        grabCompatible project (package.GetContentFiles) "content files"
     let buildFiles =
-        grabCompatible (package.GetBuildFiles) "build files"
+        grabCompatible project (package.GetBuildFiles) "build files"
+    assemblyReferences, frameworkReferences, contentFiles, buildFiles
+
+let private RemoveFilesFromProj packageInstallPath (package : IPackage) (project : IProjectSystem) (localRepo : IPackageRepository) =
+    let packagesConfig = "packages.config"
+    let otherPackages =
+        (XDocument.Parse <| project.OpenFile(packagesConfig).ReadToEnd())
+            .Descendants(XName.Get "package")
+        |> Seq.filter (fun p -> p.Attribute(XName.Get "id").Value <> package.Id)
+        |> Seq.map (fun p -> localRepo.FindPackage(p.Attribute(XName.Get "id").Value, new SemanticVersion(p.Attribute(XName.Get "version").Value), true, true))
+        |> Seq.filter (fun p -> p <> null)
+        |> Seq.toList
+    let inUseByOtherPackages =
+        if List.length otherPackages > 0 then
+            otherPackages
+            |> Seq.map (fun p -> getFiles project p)
+            |> Seq.reduce
+                (fun acc next -> 
+                    let a, f, c, b = acc
+                    let a', f', c', b' = next
+                    (Seq.append a a', Seq.append f f', Seq.append c c', Seq.append b b'))
+            |> fun (a, f, c, b) ->
+                    Seq.distinctBy (fun (assembly : IPackageAssemblyReference) -> assembly.Name) a,
+                    Seq.distinctBy (fun (frameworkRef : FrameworkAssemblyReference) -> frameworkRef.AssemblyName) f,
+                    c
+                    |> Seq.filter (fun (contentFile : IPackageFile) ->
+                        not <| fileTransformers.ContainsKey(Path.GetExtension contentFile.EffectivePath))
+                    |> Seq.distinctBy (fun contentFile -> contentFile.EffectivePath, contentFile.TargetFramework.Version),
+                    Seq.distinctBy (fun (buildFile : IPackageFile) -> buildFile.EffectivePath, buildFile.TargetFramework.Version) b
+        else
+            (Seq.empty, Seq.empty, Seq.empty, Seq.empty)
+    let assemblyReferencesToDelete, frameworkReferencesToDelete, contentFilesToDelete, buildFilesToDelete =
+        let a, f, c, b = getFiles project package
+        let a', f', c', b' = inUseByOtherPackages
+        Seq.filter (fun (assembly : IPackageAssemblyReference) -> Seq.exists (fun (assembly' : IPackageAssemblyReference) -> assembly.Name = assembly'.Name) a' |> not) a,
+        Seq.filter (fun (assembly : FrameworkAssemblyReference) -> Seq.exists (fun (assembly' : FrameworkAssemblyReference) -> assembly.AssemblyName = assembly'.AssemblyName) f' |> not) f,
+        Seq.filter (
+            fun (contentFile : IPackageFile) -> 
+                Seq.exists (
+                    fun (contentFile' : IPackageFile) -> 
+                        (contentFile.EffectivePath, contentFile.TargetFramework.Version) = (contentFile'.EffectivePath, contentFile'.TargetFramework.Version)) c' |> not) c,
+        Seq.filter (
+            fun (buildFile : IPackageFile) -> 
+                Seq.exists (
+                    fun (buildFile' : IPackageFile) -> 
+                        (buildFile.EffectivePath, buildFile.TargetFramework.Version) = (buildFile'.EffectivePath, buildFile'.TargetFramework.Version)) b' |> not) b
+    project.DeleteFiles(contentFilesToDelete, otherPackages, fileTransformers)
+    assemblyReferencesToDelete |> Seq.iter (fun a -> project.RemoveReference(a.Name))
+    buildFilesToDelete
+    |> Seq.map (fun bf -> Path.Combine(packageInstallPath, bf.Path))
+    |> Seq.iter (fun fullPath -> project.RemoveImport(fullPath))
+
+let private AddFilesToProj packageInstallPath package project =
+    let assemblyReferences, frameworkReferences, contentFiles, buildFiles =
+        getFiles project package
     if
         (Seq.isEmpty assemblyReferences 
         && Seq.isEmpty frameworkReferences
@@ -51,47 +98,139 @@ let AddFilesToProj packageInstallPath (package : IPackage) (project : IProjectSy
         then
         failwith "Unable to find compatible items for framework %s in package %s." (project.TargetFramework.FullName) (package.GetFullName())
     let filteredAssemblyReferences =
-        match package.PackageAssemblyReferences with
-        | null -> assemblyReferences
-        | par ->
-            match project.TryGetCompatibleItems(par) with
-            | (true, items) ->
-                Seq.filter (fun assembly -> not <| Seq.exists (fun (pr : PackageReferenceSet) -> pr.References.Contains(assembly.Name, StringComparer.OrdinalIgnoreCase)) items) assemblyReferences
-            | (false, _) ->
-                assemblyReferences
-    let fileTransformers : IDictionary<string, IPackageFileTransformer> =
-        dict [(".transform", XmlTransformer() :> IPackageFileTransformer);(".pp", Preprocessor() :> IPackageFileTransformer)]
+        getFilteredAssemblies package project assemblyReferences
     project.AddFiles(contentFiles, fileTransformers)
-    assemblyReferences
+    filteredAssemblyReferences
     |> Seq.filter (fun a -> not <| a.IsEmptyFolder())
     |> Seq.iter (fun a ->
                         let refPath = Path.Combine(packageInstallPath, a.Path)
                         if project.ReferenceExists(a.Name) then project.RemoveReference(a.Name)
                         project.AddReference(refPath, Stream.Null))
 
+let private SortPackages (configDoc : XDocument) =
+    configDoc.Element(XName.Get "packages").Elements(XName.Get "package")
+    |> Seq.sortBy (fun p -> (p.Attribute (XName.Get "id")).Value.ToLower())
+    |> Seq.map (fun x -> x.Remove(); x)
+    |> Seq.toArray
+    |> configDoc.Element(XName.Get "packages").Add
+
+let private DeletePackageNode id (packagesNode : XElement) =
+    packagesNode.Elements()
+    |> Seq.tryFind(fun e ->
+        e.Attribute (XName.Get "id") <> null && (e.Attribute (XName.Get "id")).Value = id)
+    |> function
+       | Some node -> node.Remove()
+       | None -> ()
+
+let private UninstallFromPackagesConfigFile id (project : IProjectSystem) =
+    let fileName = "packages.config"
+    if project.FileExists(fileName) then
+        project.OpenFile(fileName)
+        |> fun stream -> XDocument.Parse (stream.ReadToEnd())
+        |> Some
+    else
+        None
+    |>  function
+        | None -> ()
+        | Some configDoc ->
+            configDoc.Element(XName.Get "packages")
+            |> DeletePackageNode id
+            SortPackages configDoc
+            project.AddFile(fileName, fun (s : Stream) -> configDoc.Save(s))
+
+let private InstallToPackagesConfigFile (package : IPackage) (project : IProjectSystem) =
+    let fileName = "packages.config"
+    let configDoc =
+        use stream =
+            if project.FileExists(fileName) then
+                project.OpenFile(fileName)
+            else
+                project.CreateFile(fileName)
+        XDocument.Parse (stream.ReadToEnd())
+    let packagesNode =
+        if Seq.length (configDoc.Elements()) > 0 then
+            configDoc.Elements(XName.Get "packages")
+            |> Seq.head
+        else
+            let node = new XElement(XName.Get "packages")
+            configDoc.Add(node)
+            node
+    // Check if a version is already installed, and remove it...
+    DeletePackageNode package.Id packagesNode 
+    // Add the new version
+    let packageNode =
+        sprintf "<package id=\"%s\" version=\"%s\" targetFramework=\"%s\" />" package.Id (package.Version.ToString()) (VersionUtility.GetShortFrameworkName project.TargetFramework)
+        |> XElement.Parse
+    packagesNode.Add packageNode
+    SortPackages configDoc
+    project.AddFile(fileName, fun (s : Stream) -> configDoc.Save(s))
+
+let private GetRawManager (projectName : string) =
+    if String.IsNullOrWhiteSpace projectName then raise <| ArgumentException("projectName cannot be empty")
+    let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
+    let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
+    let repositoryPath = settings.GetRepositoryPath()
+    printfn "repo path: %s" repositoryPath
+    let defaultPackageSource = PackageSource "https://nuget.org/api/v2/"
+    let packageSourceProvider = PackageSourceProvider (settings, [defaultPackageSource])
+    let remoteRepository = packageSourceProvider.GetAggregate(PackageRepositoryFactory())
+    let localRepository = SharedPackageRepository repositoryPath
+    let logger = { new ILogger 
+                        with 
+                            member x.Log(level, message, parameters) = Console.WriteLine("[{0}] {1}", level.ToString(), String.Format(message, parameters))
+                            member x.ResolveFileConflict(message) = FileConflictResolution() }
+    let packageManager = PackageManager(
+                                            remoteRepository, 
+                                            DefaultPackagePathResolver(PhysicalFileSystem repositoryPath), 
+                                            PhysicalFileSystem repositoryPath,
+                                            localRepository)
+    packageManager.Logger <- logger
+    packageManager
+
+let private GetManager projectName =
+    let packageManager = GetRawManager projectName
+    let project = ProjectSystem(projectName) :> IProjectSystem
+    packageManager.PackageInstalling.Add(fun ev -> InstallToPackagesConfigFile ev.Package project)
+    packageManager.PackageInstalling.Add(fun ev -> AddFilesToProj ev.InstallPath ev.Package project)
+    packageManager.PackageUninstalling.Add(fun ev -> RemoveFilesFromProj ev.InstallPath ev.Package project packageManager.LocalRepository)
+    packageManager.PackageUninstalling.Add(fun ev -> UninstallFromPackagesConfigFile ev.Package.Id project)
+    packageManager
+
 let UpdateReferenceToSpecificVersion projectName packageId (version : SemanticVersion) =
     let pm = GetManager projectName
-    pm.UpdatePackage(packageId, version, true, true)
+    let existingPackage = pm.LocalRepository.FindPackage(packageId)
+    pm.UninstallPackage(existingPackage, true, true)
+    pm.InstallPackage(packageId, version, false, true)
 
 let UpdateReference projectName (packageId : string) =
     let pm = GetManager projectName
-    pm.UpdatePackage(packageId, true, false)
-
-let private getInstallManager projectName =
-    let manager = GetManager projectName
-    let project = ProjectSystem(projectName) :> IProjectSystem
-    manager.PackageInstalling.Add(fun ev -> AddFilesToProj ev.InstallPath ev.Package project)
-    manager
+    let existingPackage = pm.LocalRepository.FindPackage(packageId)
+    pm.UninstallPackage(existingPackage, true, true)
+    pm.InstallPackage packageId
 
 let InstallReferenceOfSpecificVersion projectName packageId (version : SemanticVersion) =
-    let manager = getInstallManager projectName
+    let manager = GetManager projectName
     manager.InstallPackage(packageId, version, false, true)
 
 let InstallReference projectName packageId =
-    let manager = getInstallManager projectName
+    let manager = GetManager projectName
     manager.InstallPackage packageId
 
+type private RestorePackage = { Id : string; Version : SemanticVersion }
+
+let RestoreReferences projectName =
+    let manager = GetRawManager projectName
+    let packages =
+        use stream = File.OpenRead(Path.Combine(Path.GetDirectoryName(projectName), "packages.config"))
+        XDocument.Load(stream).Element(XName.Get "packages").Elements(XName.Get "package")
+        |> Seq.map (fun p -> {
+                                Id = p.Attribute(XName.Get "id").Value
+                                Version = SemanticVersion(p.Attribute(XName.Get "version").Value)
+                             })
+    packages
+    |> Seq.iter (fun p -> manager.InstallPackage(p.Id, p.Version, false, true))
 
 let RemoveReference projectName (packageId : string) =
     let manager = GetManager projectName
-    manager.UninstallPackage packageId
+    let package = manager.LocalRepository.FindPackage(packageId)
+    manager.UninstallPackage(package, true, true)
