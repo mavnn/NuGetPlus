@@ -21,3 +21,11 @@ Want to call them from code? Reference the dll and be amazed by the fact that th
 
 But most things should work. One caveat is that it requires a repositoryPath setting in a findable
 nuget.config (it loads settings files the same way as NuGet does).
+
+# Get involved!
+
+Pull requests gratefully accepted. The code has hacked together in a hurry as I learnt how NuGet had
+been built, so it could definitely be cleaned up.
+
+There's also a bunch of other functionality that is... a bit ropey... in the normal NuGet client,
+search as package search for packages with a lot of versions that could be added.
