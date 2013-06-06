@@ -24,7 +24,7 @@ nuget.config (it loads settings files the same way as NuGet does).
 
 # Get involved!
 
-Pull requests gratefully accepted. The code has hacked together in a hurry as I learnt how NuGet had
+Pull requests gratefully accepted. The code was hacked together in a hurry as I learnt how NuGet had
 been built, so it could definitely be cleaned up.
 
 There's also a bunch of other functionality that is... a bit ropey... in the normal NuGet client,
