@@ -8,7 +8,7 @@ Want to downgrade the version of a NuGet package you're using without pain?
 
 This could be the wrapper for you, when it's finished.
 
-# Command line options available for NuGetPlus.exe
+# Command line options available for ngp.exe
 
     --action <string>: Specify an action: Install, Remove, Restore or Update
     --projectfile <string>: Path to project file to update.
