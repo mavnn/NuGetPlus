@@ -8,7 +8,7 @@
     <ProjectGuid>7b00c7b9-983c-4645-b726-ca6276de6446</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>NuGetPlus</RootNamespace>
-    <AssemblyName>NuGetPlus</AssemblyName>
+    <AssemblyName>ngp</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>NuGetPlus</Name>
   </PropertyGroup>
