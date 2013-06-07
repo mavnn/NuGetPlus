@@ -196,6 +196,16 @@ let private GetManager projectName =
     packageManager.PackageUninstalling.Add(fun ev -> UninstallFromPackagesConfigFile ev.Package.Id project)
     packageManager
 
+type private RestorePackage = { Id : string; Version : SemanticVersion }
+
+let private getRestorePackages projectName =
+    use stream = File.OpenRead(Path.Combine(Path.GetDirectoryName(projectName), "packages.config"))
+    XDocument.Load(stream).Element(XName.Get "packages").Elements(XName.Get "package")
+    |> Seq.map (fun p -> {
+                            Id = p.Attribute(XName.Get "id").Value
+                            Version = SemanticVersion(p.Attribute(XName.Get "version").Value)
+                         })
+
 let UpdateReferenceToSpecificVersion projectName packageId (version : SemanticVersion) =
     let pm = GetManager projectName
     let existingPackage = pm.LocalRepository.FindPackage(packageId)
@@ -216,21 +226,15 @@ let InstallReference projectName packageId =
     let manager = GetManager projectName
     manager.InstallPackage packageId
 
-type private RestorePackage = { Id : string; Version : SemanticVersion }
-
 let RestoreReferences projectName =
     let manager = GetRawManager projectName
-    let packages =
-        use stream = File.OpenRead(Path.Combine(Path.GetDirectoryName(projectName), "packages.config"))
-        XDocument.Load(stream).Element(XName.Get "packages").Elements(XName.Get "package")
-        |> Seq.map (fun p -> {
-                                Id = p.Attribute(XName.Get "id").Value
-                                Version = SemanticVersion(p.Attribute(XName.Get "version").Value)
-                             })
+    let packages = getRestorePackages projectName
     packages
     |> Seq.iter (fun p -> manager.InstallPackage(p.Id, p.Version, false, true))
 
 let RemoveReference projectName (packageId : string) =
     let manager = GetManager projectName
-    let package = manager.LocalRepository.FindPackage(packageId)
+    let restorePackages = getRestorePackages projectName
+    let version = (Seq.find (fun p -> p.Id = packageId) restorePackages).Version
+    let package = manager.LocalRepository.FindPackage(packageId, version)
     manager.UninstallPackage(package, true, true)
