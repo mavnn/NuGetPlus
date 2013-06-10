@@ -165,11 +165,30 @@ let private InstallToPackagesConfigFile (package : IPackage) (project : IProject
     SortPackages configDoc
     project.AddFile(fileName, fun (s : Stream) -> configDoc.Save(s))
 
+let private inferRepositoryDirectory projectDir =
+    let rec inner (currentDir : DirectoryInfo) =
+        if Array.length (currentDir.GetFiles("*.sln")) > 0 then
+            Some currentDir
+        else
+            if currentDir.Parent <> null then
+                inner currentDir.Parent
+            else
+                None
+    let solutionDir = inner <| DirectoryInfo(projectDir)
+    match solutionDir with
+    | Some dir ->
+        Path.Combine(dir.FullName, "packages")
+    | None -> Path.Combine(projectDir, "packages")
+
 let private GetRawManager (projectName : string) =
     if String.IsNullOrWhiteSpace projectName then raise <| ArgumentException("projectName cannot be empty")
     let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
     let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
-    let repositoryPath = settings.GetRepositoryPath()
+    let repositoryPath = 
+        match settings.GetRepositoryPath() with
+        | null ->
+            inferRepositoryDirectory projectDir
+        | s -> s
     printfn "repo path: %s" repositoryPath
     let defaultPackageSource = PackageSource "https://nuget.org/api/v2/"
     let packageSourceProvider = PackageSourceProvider (settings, [defaultPackageSource])

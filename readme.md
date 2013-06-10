@@ -6,7 +6,7 @@ Need to install dependencies from the commandline without firing up Visual Studi
 
 Want to downgrade the version of a NuGet package you're using without pain?
 
-This could be the wrapper for you, when it's finished.
+This could be the wrapper for you. Code is at an alpha status at the moment.
 
 # Command line options available for ngp.exe
 
@@ -16,11 +16,6 @@ This could be the wrapper for you, when it's finished.
     --version <string>: Optional specific version of package.
 
 Want to call them from code? Reference the dll and be amazed by the fact that the logic works the same way as the command line executable. Astonishing!
-
-# This is very much pre-production
-
-But most things should work. One caveat is that it requires a repositoryPath setting in a findable
-nuget.config (it loads settings files the same way as NuGet does).
 
 # Get involved!
 

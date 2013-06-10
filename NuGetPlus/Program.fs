@@ -46,28 +46,41 @@ let main argv =
         let results = parser.Parse()
         let action = results.PostProcessResult <@ Action @> processAction
         let proj = results.PostProcessResult <@ ProjectFile @> processProjectFile
-        let package = results.GetResult <@ PackageId @>
+        let maybePackage = results.TryGetResult <@ PackageId @>
         let version = results.TryPostProcessResult <@ Version @> processVersion
 
         printfn "Action type: %A" action
         printfn "Project file: %s" proj
-        printfn "Package ID: %s" package
+        match maybePackage with
+        | Some package ->
+            printfn "Package ID: %s" package
+        | None -> ()
+
         match version with
         | None -> ()
         | Some v -> printfn "Version: %A" v
 
+        let checkPackage mp =
+            match mp with
+            | None ->
+                failwith "A package is required for this action"
+            | Some p -> p
+
         match action with
         | Install ->
             match version with
-            | None -> InstallReference proj package
-            | Some v -> InstallReferenceOfSpecificVersion proj package v
+            | None -> InstallReference proj (checkPackage maybePackage)
+            | Some v -> InstallReferenceOfSpecificVersion proj (checkPackage maybePackage) v
         | Update ->
             match version with
-            | None -> UpdateReference proj package
-            | Some v -> UpdateReferenceToSpecificVersion proj package v
+            | None -> UpdateReference proj (checkPackage maybePackage)
+            | Some v -> UpdateReferenceToSpecificVersion proj (checkPackage maybePackage) v
         | Remove ->
-            RemoveReference proj package
+            RemoveReference proj (checkPackage maybePackage)
         | Restore ->
+            match maybePackage with
+            | Some package -> failwith "PackageId provided for restore action - restore will always restore the whole packages.config"
+            | None -> ()
             RestoreReferences proj
         0
     with 
