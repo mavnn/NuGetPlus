@@ -8,7 +8,7 @@
     <ProjectGuid>fdc4bdd6-b4a4-44ef-8127-e90b8d09c54e</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>ReferenceUpdater</RootNamespace>
-    <AssemblyName>ReferenceUpdater</AssemblyName>
+    <AssemblyName>NuGetPlus.ReferenceUpdater</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>ReferenceUpdater</Name>
     <TargetFrameworkProfile />
@@ -55,6 +55,7 @@
     <Compile Include="ReferenceManagement.fs" />
     <None Include="Script.fsx" />
     <None Include="packages.config" />
+    <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

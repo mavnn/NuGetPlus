@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>NuGetPlus</id>
+    <version>$version$</version>
+    <title>NuGetPlus</title>
+    <authors>Michael Newton</authors>
+    <owners>Michael Newton</owners>
+    <licenseUrl>https://raw.github.com/mavnn/NuGetPlus/master/licence.txt</licenseUrl>
+    <projectUrl>https://github.com/mavnn/NuGetPlus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Opionated, F# compatible NuGet wrapper.</description>
+    <copyright>Copyright 2013</copyright>
+    <tags>BuildTools</tags>
+  </metadata>
+  <files>
+    <file src="bin\Release\*.*" target="tools" />
+  </files>
+</package>

@@ -1,4 +1,5 @@
-﻿open System
+﻿module NuGetPlay.Main
+open System
 open NuGet
 open ReferenceManagement
 open UnionArgParser

@@ -40,3 +40,4 @@ _TeamCity.*
 build/scripts/TestResult.*
 TestResults.xml
 *.received.xml
+output/
