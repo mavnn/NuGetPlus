@@ -30,6 +30,7 @@ InstallReferenceOfSpecificVersion projectName packageName packageVersion
 UpdateReference projectName packageName
 UpdateReferenceToSpecificVersion projectName packageName packageVersion
 RemoveReference projectName packageName
+RestoreReferences projectName
 ```
 
 ## Get involved!
