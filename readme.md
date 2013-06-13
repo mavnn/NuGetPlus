@@ -6,6 +6,8 @@ Need to install dependencies from the commandline without firing up Visual Studi
 
 Want to downgrade the version of a NuGet package you're using without pain?
 
+Want to use NuGet with F# projects without going insane?
+
 This could be the wrapper for you. Code is at an alpha status at the moment.
 
 ## Command line options available for ngp.exe
@@ -17,16 +19,18 @@ This could be the wrapper for you. Code is at an alpha status at the moment.
 
 Want to call them from code? Reference the dll and be amazed by the fact that the logic works the same way as the command line executable. Astonishing!
 
-    let packageName = "myPackage"
-    let packageVersion = NuGet.SemanticVersion("10.0.2.0")
-    let projectName = "myProject.fs"
+```fsharp
+let packageName = "myPackage"
+let packageVersion = NuGet.SemanticVersion("10.0.2.0")
+let projectName = "myProject.fs"
 
-    // Methods available are:
-    InstallReference projectName packageName
-    InstallReferenceOfSpecificVersion projectName packageName packageVersion
-    UpdateReference projectName packageName
-    UpdateReferenceToSpecificVersion projectName packageName packageVersion
-    RemoveReference projectName packageName
+// Methods available are:
+InstallReference projectName packageName
+InstallReferenceOfSpecificVersion projectName packageName packageVersion
+UpdateReference projectName packageName
+UpdateReferenceToSpecificVersion projectName packageName packageVersion
+RemoveReference projectName packageName
+```
 
 ## Get involved!
 
