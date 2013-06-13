@@ -17,6 +17,17 @@ This could be the wrapper for you. Code is at an alpha status at the moment.
 
 Want to call them from code? Reference the dll and be amazed by the fact that the logic works the same way as the command line executable. Astonishing!
 
+    let packageName = "myPackage"
+    let packageVersion = NuGet.SemanticVersion("10.0.2.0")
+    let projectName = "myProject.fs"
+
+    // Methods available are:
+    InstallReference projectName packageName
+    InstallReferenceOfSpecificVersion projectName packageName packageVersion
+    UpdateReference projectName packageName
+    UpdateReferenceToSpecificVersion projectName packageName packageVersion
+    RemoveReference projectName packageName
+
 ## Get involved!
 
 Pull requests gratefully accepted. The code was hacked together in a hurry as I learnt how NuGet had
