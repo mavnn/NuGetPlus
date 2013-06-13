@@ -41,6 +41,8 @@ been built, so it could definitely be cleaned up.
 There's also a bunch of other functionality that is... a bit ropey... in the normal NuGet client,
 search as package search for packages with a lot of versions that could be added.
 
+The next step on the roadmap is adding solution level update, remove and restore operations.
+
 ## Continuous Integration provided by CodeBetter
 
 [NuGetPlus TeamCity Project](http://teamcity.codebetter.com/project.html?projectId=project363)
