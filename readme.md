@@ -1,6 +1,6 @@
 ## Repeatable NuGet actions
 
-This project aims to provide a NuGet wrapper with the following functionality, both via dll and via a easy to use command line interface:
+This project aims to provide a NuGet wrapper with the following functionality, both via dll and via an easy to use command line interface:
 
 1.    Reliable installation of NuGet references to C#, VB.net and F# projects.
 1.    Reliable upgrades of NuGet references in all project types.
