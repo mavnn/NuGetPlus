@@ -19,9 +19,10 @@ There is a blog post that contains [more explaination on the project aims](http:
     --packageid <string>: NuGet package id for action.
     --version <string>: Optional specific version of package.
 
-Want to call them from code? Reference the dll and be amazed by the fact that the logic works the same way as the command line executable. Astonishing!
+ngp.exe is a thin wrapper around the underlying dll, allowing the same operations to be called trivially from code:
 
 ```fsharp
+// This is F# code but the dll can be referenced from other .net languages too.
 let packageName = "myPackage"
 let packageVersion = NuGet.SemanticVersion("10.0.2.0")
 let projectName = "myProject.fs"
