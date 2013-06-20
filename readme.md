@@ -10,6 +10,8 @@ This project aims to provide a NuGet wrapper with the following functionality, b
 
 As a 'meta-goal' we aim to be a dropin replacement, respecting things like nuget.config files in the same way as the official NuGet clients (with an exception for where those clients are subject to bugs).
 
+It this time, goals 1-4 are officially supported.
+
 There is a blog post that contains [more explaination on the project aims](http://mikehadlow.blogspot.co.uk/2013/06/guest-post-working-around-fnuget.html).
 
 ## Command line options available for ngp.exe
@@ -19,7 +21,9 @@ There is a blog post that contains [more explaination on the project aims](http:
     --packageid <string>: NuGet package id for action.
     --version <string>: Optional specific version of package.
 
-ngp.exe is a thin wrapper around the underlying dll, allowing the same operations to be called trivially from code:
+## Call the same logic easily from code
+
+ngp.exe is a thin wrapper around the underlying dll, allowing the same operations to be called:
 
 ```fsharp
 // This is F# code but the dll can be referenced from other .net languages too.
