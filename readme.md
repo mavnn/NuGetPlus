@@ -10,7 +10,7 @@ This project aims to provide a NuGet wrapper with the following functionality, b
 
 As a 'meta-goal' we aim to be a dropin replacement, respecting things like nuget.config files in the same way as the official NuGet clients (with an exception for where those clients are subject to bugs).
 
-It this time, goals 1-4 are officially supported.
+At this time, goals 1-4 are officially supported.
 
 There is a blog post that contains [more explaination on the project aims](http://mikehadlow.blogspot.co.uk/2013/06/guest-post-working-around-fnuget.html).
 
