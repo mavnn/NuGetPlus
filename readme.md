@@ -1,14 +1,16 @@
 ## Repeatable NuGet actions
 
-Frustrated with broken hintpaths and wrong versions of dlls being referenced?
+This project aims to provide a NuGet wrapper with the following functionality, both via dll and via a easy to use command line interface:
 
-Need to install dependencies from the commandline without firing up Visual Studio?
+1.    Reliable installation of NuGet references to C#, VB.net and F# projects.
+1.    Reliable upgrades of NuGet references in all project types.
+1.    Reliable downgrades of NuGet references in all project types. It’s painful to try a new release/pre-release of a NuGet package across a solution and then discover that you have to manually downgrade all of the projects separately if you decide not to take the new version.
+1.    Reliable removal of NuGet references turns out to be a requirement of reliable downgrades.
+1.    Sane solution wide management of references. Due to the way project references work, we need an easy way to ensure that all of the projects in a solution use the same version of any particular NuGet reference, and to check that this will not case any version conflicts. So ideally, upgrade and downgrade commands will run against a solution.
 
-Want to downgrade the version of a NuGet package you're using without pain?
+As a 'meta-goal' we aim to be a dropin replacement, respecting things like nuget.config files in the same way as the official NuGet clients (with an exception for where those clients are subject to bugs).
 
-Want to use NuGet with F# projects without going insane?
-
-This could be the wrapper for you. Code is at an alpha status at the moment.
+There is a blog post that contains [more explaination on the project aims](http://mikehadlow.blogspot.co.uk/2013/06/guest-post-working-around-fnuget.html).
 
 ## Command line options available for ngp.exe
 
@@ -35,18 +37,17 @@ RestoreReferences projectName
 
 ## Get involved!
 
+Issues and the current roadmap can be found at the [NuGetPlus YouTrack Instance](http://nugetplus.myjetbrains.com).
+
 Pull requests gratefully accepted. The code was hacked together in a hurry as I learnt how NuGet had
 been built, so it could definitely be cleaned up.
 
-There's also a bunch of other functionality that is... a bit ropey... in the normal NuGet client,
-search as package search for packages with a lot of versions that could be added.
+## Continuous Integration and Issue Management provided by CodeBetter and JetBrains
 
-The next step on the roadmap is adding solution level update, remove and restore operations.
+[NuGetPlus TeamCity Project](http://teamcity.codebetter.com/project.html?projectId=project363) is kindly provided by [CodeBetter](http://codebetter.com/) and [JetBrains](http://www.jetbrains.com/).
 
-## Continuous Integration provided by CodeBetter
+[NuGetPlus YouTrack Instance](http://nugetplus.myjetbrains.com) provided by [JetBrains](http://www.jetbrains.com/) under their [OSS Project License](http://www.jetbrains.com/youtrack/buy/buy.jsp).
 
-[NuGetPlus TeamCity Project](http://teamcity.codebetter.com/project.html?projectId=project363)
-
-Our build server is kindly provided by [CodeBetter](http://codebetter.com/) and [JetBrains](http://www.jetbrains.com/).
+Many thanks to both CodeBetter and JetBrains for provided these services.
 
 ![YouTrack and TeamCity](http://www.jetbrains.com/img/banners/Codebetter300x250.png) 
