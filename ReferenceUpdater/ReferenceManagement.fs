@@ -142,19 +142,15 @@ let private InstallToPackagesConfigFile (package : IPackage) (project : IProject
     let fileName = "packages.config"
     let configDoc =
         use stream =
-            if project.FileExists(fileName) then
-                project.OpenFile(fileName)
-            else
-                project.CreateFile(fileName)
+            if not <| project.FileExists(fileName) then
+                using
+                    (new IO.StreamWriter(project.CreateFile(fileName)))
+                    (fun writer ->
+                        writer.Write("<packages />"))
+            project.OpenFile(fileName)
         XDocument.Parse (stream.ReadToEnd())
     let packagesNode =
-        if Seq.length (configDoc.Elements()) > 0 then
-            configDoc.Elements(XName.Get "packages")
-            |> Seq.head
-        else
-            let node = new XElement(XName.Get "packages")
-            configDoc.Add(node)
-            node
+        configDoc.Element(XName.Get "packages")
     // Check if a version is already installed, and remove it...
     DeletePackageNode package.Id packagesNode 
     // Add the new version

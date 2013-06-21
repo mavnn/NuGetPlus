@@ -5,6 +5,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ReferenceUpdater", "Referen
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NuGetPlus", "NuGetPlus\NuGetPlus.fsproj", "{7B00C7B9-983C-4645-B726-CA6276DE6446}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NuGetPlus.TickSpec.Tests", "NuGetPlus.TickSpec.Tests\NuGetPlus.TickSpec.Tests.fsproj", "{AB35C11D-DB95-4AA8-BE96-6E9C0DF5012D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{7B00C7B9-983C-4645-B726-CA6276DE6446}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B00C7B9-983C-4645-B726-CA6276DE6446}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B00C7B9-983C-4645-B726-CA6276DE6446}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB35C11D-DB95-4AA8-BE96-6E9C0DF5012D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB35C11D-DB95-4AA8-BE96-6E9C0DF5012D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB35C11D-DB95-4AA8-BE96-6E9C0DF5012D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB35C11D-DB95-4AA8-BE96-6E9C0DF5012D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

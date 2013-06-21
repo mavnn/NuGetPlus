@@ -1,0 +1,1 @@
+These are empty projects used by the TickSpec BDD-style tests in NuGetPlus.TickSpec.Tests

@@ -7,9 +7,16 @@ open System.Reflection
 open Microsoft.Build.Evaluation
 open NuGet
 
+let TryGetProject projectFile =
+    ProjectCollection.GlobalProjectCollection.GetLoadedProjects(projectFile)
+    |> Seq.tryFind (fun p -> p.FullPath = projectFile)
+
 type ProjectSystem (projectFile : string) =
     inherit PhysicalFileSystem(Path.GetDirectoryName(projectFile))
-    let project = Project(projectFile)
+    let project =
+        match TryGetProject projectFile with
+        | Some project -> project
+        | None -> Project(projectFile)
     let projectName = Path.GetFileNameWithoutExtension <| project.FullPath
     let framework = new Runtime.Versioning.FrameworkName(project.GetPropertyValue("TargetFrameworkMoniker"))
     let GetReference path =

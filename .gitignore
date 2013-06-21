@@ -41,3 +41,4 @@ build/scripts/TestResult.*
 TestResults.xml
 *.received.xml
 output/
+TestResult.xml
