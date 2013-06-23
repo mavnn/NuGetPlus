@@ -54,7 +54,9 @@ let [<Given>] ``a (.*) with (packages|no packages)`` (projType:string) (hasPacka
     let projDir = Directory.CreateDirectory(Path.GetDirectoryName destination)
     let nugetConfig = FileInfo(Path.Combine(testProjectDir.FullName, "nuget.config"))
     nugetConfig.CopyTo(Path.Combine(projDir.FullName, "nuget.config")) |> ignore
-    state <- { state with project = example.CopyTo destination }
+    example.Directory.GetFiles()
+    |> Seq.iter (fun fi -> fi.CopyTo(Path.Combine(Path.GetDirectoryName destination, fi.Name)) |> ignore)
+    state <- { state with project = FileInfo(destination) }
       
 let [<When>] ``I install (.*)`` (packageId:string) =  
     state <- { state with package = packageId }
@@ -63,6 +65,10 @@ let [<When>] ``I install (.*)`` (packageId:string) =
 let [<When>] ``remove (.*)`` (packageId:string) =  
     state <- { state with package = packageId }
     RemoveReference state.project.FullName packageId
+
+let [<When>] ``I restore a project with (.*)`` (packageId:string) =
+    state <- { state with package = packageId }
+    RestoreReferences state.project.FullName
       
 let [<Then>] ``the package (should|should not) be installed in the right directory`` (should : string) =
     let packagesDir = DirectoryInfo(Path.Combine(state.project.Directory.FullName, "packages"))
@@ -75,7 +81,7 @@ let [<Then>] ``the package (should|should not) be installed in the right directo
     else
         match should with
         | "should" -> Assert.Fail()
-        | "should not" -> ()
+        | "should not" -> Assert.IsTrue true
         | _ -> failwith "Unknown should option"
 
 let [<Then>] ``the reference (should|should not) be added to the project file`` (should : string) =     
