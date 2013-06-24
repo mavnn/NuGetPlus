@@ -13,7 +13,7 @@ let packExe () =
     let setNugetParams param =
          { param with 
                     Version = version
-                    Project = "ngp"
+                    Project = "NuGetPlus"
                     OutputPath = "." @@ "output"
                     WorkingDir = "."
                     ToolPath = tools @@ "NuGet" @@ "NuGet.exe"
