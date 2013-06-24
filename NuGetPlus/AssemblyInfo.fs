@@ -11,9 +11,9 @@ open System.Runtime.InteropServices
 [<assembly: AssemblyCopyright("Copyright © Michael Newton 2013")>]
 [<assembly: AssemblyTrademark("")>]
 
-[<assembly: AssemblyVersion("1.0.2.0")>]
-[<assembly: AssemblyFileVersion("1.0.2.0")>]
-[<assembly: AssemblyInformationalVersion("1.0.2-master-local")>]
+[<assembly: AssemblyVersion("1.0.3.0")>]
+[<assembly: AssemblyFileVersion("1.0.3.0")>]
+[<assembly: AssemblyInformationalVersion("1.0.3-master-local")>]
 
 [<assembly: ComVisible(false)>]
 
