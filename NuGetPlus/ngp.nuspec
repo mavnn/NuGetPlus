@@ -9,7 +9,7 @@
     <licenseUrl>https://raw.github.com/mavnn/NuGetPlus/master/licence.txt</licenseUrl>
     <projectUrl>https://github.com/mavnn/NuGetPlus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Opionated, F# compatible NuGet wrapper.</description>
+    <description>Command line Nuget wrapper.</description>
     <copyright>Copyright 2013</copyright>
     <tags>BuildTools</tags>
   </metadata>
