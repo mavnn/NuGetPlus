@@ -235,11 +235,26 @@ let UpdateReference projectName (packageId : string) =
 
 let InstallReferenceOfSpecificVersion projectName packageId (version : SemanticVersion) =
     let manager = GetManager projectName
-    manager.InstallPackage(packageId, version, false, true)
+    let ok, package = manager.LocalRepository.TryFindPackage(packageId, version)
+    if ok then
+        manager.Logger.Log(MessageLevel.Debug, "LocalRepository already contains package {0}, installing files.", packageId)
+        let project = ProjectSystem(projectName) :> IProjectSystem
+        InstallToPackagesConfigFile package project
+        AddFilesToProj (manager.PathResolver.GetInstallPath package) package project
+    else
+        manager.InstallPackage(packageId, version, false, true)
 
 let InstallReference projectName packageId =
     let manager = GetManager projectName
-    manager.InstallPackage packageId
+    let latest = manager.SourceRepository.FindPackage(packageId)
+    let ok, package = manager.LocalRepository.TryFindPackage(latest.Id, latest.Version)
+    if ok then
+        manager.Logger.Log(MessageLevel.Debug, "LocalRepository already contains package {0}, installing files.", packageId)
+        let project = ProjectSystem(projectName) :> IProjectSystem
+        InstallToPackagesConfigFile package project
+        AddFilesToProj (manager.PathResolver.GetInstallPath package) package project
+    else
+        manager.InstallPackage packageId
 
 let RestoreReferences projectName =
     let manager = GetRawManager projectName

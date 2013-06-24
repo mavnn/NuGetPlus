@@ -39,7 +39,7 @@ type State =
 
 let mutable state = { project = FileInfo("."); package = ""; expectedVersion = None }
 
-let [<Given>] ``a (.*) with (packages|no packages)`` (projType:string) (hasPackages:string) = 
+let constructWorkingProject projType hasPackages destinationDir =
     let midFix =
         match hasPackages with
         | "packages" -> ".WithPackages."
@@ -51,13 +51,24 @@ let [<Given>] ``a (.*) with (packages|no packages)`` (projType:string) (hasPacka
         |> Seq.head
     ensureWorkingDirectory ()
     cleanWorkingPackagesDirectory ()
-    let destination = Path.Combine(workingDir.FullName, Guid.NewGuid().ToString(), example.Name)
-    let projDir = Directory.CreateDirectory(Path.GetDirectoryName destination)
+    let destination = Path.Combine(destinationDir, example.Name)
+    let projDir = DirectoryInfo(Path.GetDirectoryName destination)
+    if projDir.Exists then
+        projDir.Delete(true)
+    projDir.Create()
     let nugetConfig = FileInfo(Path.Combine(testProjectDir.FullName, "nuget.config"))
     nugetConfig.CopyTo(Path.Combine(projDir.FullName, "nuget.config")) |> ignore
     example.Directory.GetFiles()
     |> Seq.iter (fun fi -> fi.CopyTo(Path.Combine(Path.GetDirectoryName destination, fi.Name)) |> ignore)
     state <- { state with project = FileInfo(destination) }
+
+let [<Given>] ``a (\w*) with (packages|no packages)`` (projType:string) (hasPackages:string) = 
+    let destinationDir = Path.Combine(workingDir.FullName, Guid.NewGuid().ToString())
+    constructWorkingProject projType hasPackages destinationDir
+
+let [<Given>] ``a (\w*) (.*) with (packages|no packages)`` (ordinal:string) (projType:string) (hasPackages:string) =
+    let destinationDir = Path.Combine(workingDir.FullName, ordinal)
+    constructWorkingProject projType hasPackages destinationDir
 
 let [<When>] ``I install (\S*) version (\S*)`` (packageId:string) (version:string) =
     state <- { state with package = packageId; expectedVersion = Some version }

@@ -28,6 +28,21 @@ Scenario outline: Installing specific versions should work
 	| CsProj		| packages			|
 	| CsProj		| no packages		|
 
+Scenario outline: Installing the same package to multiple projects should work
+	Given a first <project type> with packages
+	Given a second <project type 2> with <existing packages>
+	When I install <nuget id>
+	Then the package should be installed in the right directory
+	And the reference should be added to the project file
+	And the package should be added to the packages.config file
+
+	Examples:
+	| project type	| project type 2	| existing packages	| nuget id			|
+	| FsProj		| FsProj			| no packages		| Newtonsoft.Json	|
+	| FsProj		| CsProj			| packages			| Newtonsoft.Json	|
+	| CsProj		| CsProj			| no packages		| Ninject			|
+	| CsProj		| FsProj			| packages			| Ninject			|
+
 Scenario outline: Restore should work
 	Given a <project type> with packages
 	When I restore a project with <nuget id>
