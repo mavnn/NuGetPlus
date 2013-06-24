@@ -176,9 +176,27 @@ let private inferRepositoryDirectory projectDir =
         Path.Combine(dir.FullName, "packages")
     | None -> Path.Combine(projectDir, "packages")
 
-let private GetRawManager (projectName : string) =
+type ActionType =
+    | Install
+    | Remove
+
+type InstallSharedPackageRepository (repositoryPath : string, projectName : string) =
+    inherit SharedPackageRepository(repositoryPath)
+    override this.Exists(packageId : string, version : SemanticVersion) =
+        let packagesConfig = FileInfo(Path.Combine(Path.GetDirectoryName projectName, "packages.config"))
+        if packagesConfig.Exists then
+            using
+                (packagesConfig.OpenRead())
+                (fun file ->
+                    let packagesXml = XDocument.Load(file)
+                    packagesXml.Descendants(XName.Get "package")
+                    |> Seq.exists(fun x -> x.Attribute(XName.Get "id").Value = packageId))
+        else
+            false
+
+let private GetRawManager (projectName : string) actionType =
     if String.IsNullOrWhiteSpace projectName then raise <| ArgumentException("projectName cannot be empty")
-    let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
+    let projectDir = Path.GetFullPath <| Path.GetDirectoryName projectName
     let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
     let repositoryPath = 
         match settings.GetRepositoryPath() with
@@ -189,7 +207,10 @@ let private GetRawManager (projectName : string) =
     let defaultPackageSource = PackageSource "https://nuget.org/api/v2/"
     let packageSourceProvider = PackageSourceProvider (settings, [defaultPackageSource])
     let remoteRepository = packageSourceProvider.GetAggregate(PackageRepositoryFactory())
-    let localRepository = SharedPackageRepository repositoryPath
+    let localRepository =
+        match actionType with
+        | Install -> InstallSharedPackageRepository(repositoryPath, projectName) :> SharedPackageRepository
+        | Remove -> SharedPackageRepository repositoryPath
     let logger = { new ILogger 
                         with 
                             member x.Log(level, message, parameters) = Console.WriteLine("[{0}] {1}", level.ToString(), String.Format(message, parameters))
@@ -202,8 +223,8 @@ let private GetRawManager (projectName : string) =
     packageManager.Logger <- logger
     packageManager
 
-let private GetManager projectName =
-    let packageManager = GetRawManager projectName
+let private GetManager projectName actionType =
+    let packageManager = GetRawManager projectName actionType
     let project = ProjectSystem(projectName) :> IProjectSystem
     packageManager.PackageInstalling.Add(fun ev -> InstallToPackagesConfigFile ev.Package project)
     packageManager.PackageInstalling.Add(fun ev -> AddFilesToProj ev.InstallPath ev.Package project)
@@ -222,33 +243,33 @@ let private getRestorePackages projectName =
                          })
 
 let UpdateReferenceToSpecificVersion projectName packageId (version : SemanticVersion) =
-    let pm = GetManager projectName
+    let pm = GetManager projectName Remove
     let existingPackage = pm.LocalRepository.FindPackage(packageId)
     pm.UninstallPackage(existingPackage, true, true)
     pm.InstallPackage(packageId, version, false, true)
 
 let UpdateReference projectName (packageId : string) =
-    let pm = GetManager projectName
+    let pm = GetManager projectName Remove
     let existingPackage = pm.LocalRepository.FindPackage(packageId)
     pm.UninstallPackage(existingPackage, true, true)
     pm.InstallPackage packageId
 
 let InstallReferenceOfSpecificVersion projectName packageId (version : SemanticVersion) =
-    let manager = GetManager projectName
+    let manager = GetManager projectName Install
     manager.InstallPackage(packageId, version, false, true)
 
 let InstallReference projectName packageId =
-    let manager = GetManager projectName
+    let manager = GetManager projectName Install
     manager.InstallPackage packageId
 
 let RestoreReferences projectName =
-    let manager = GetRawManager projectName
+    let manager = GetRawManager projectName Remove
     let packages = getRestorePackages projectName
     packages
     |> Seq.iter (fun p -> manager.InstallPackage(p.Id, p.Version, false, true))
 
 let RemoveReference projectName (packageId : string) =
-    let manager = GetManager projectName
+    let manager = GetManager projectName Remove
     let restorePackages = getRestorePackages projectName
     let version = (Seq.find (fun p -> p.Id = packageId) restorePackages).Version
     let package = manager.LocalRepository.FindPackage(packageId, version)

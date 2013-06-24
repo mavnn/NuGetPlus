@@ -34,9 +34,10 @@ type State =
     {
         project : FileInfo
         package : string
+        expectedVersion : Option<string>
     }
 
-let mutable state = { project = FileInfo("."); package = "" }
+let mutable state = { project = FileInfo("."); package = ""; expectedVersion = None }
 
 let [<Given>] ``a (.*) with (packages|no packages)`` (projType:string) (hasPackages:string) = 
     let midFix =
@@ -57,8 +58,12 @@ let [<Given>] ``a (.*) with (packages|no packages)`` (projType:string) (hasPacka
     example.Directory.GetFiles()
     |> Seq.iter (fun fi -> fi.CopyTo(Path.Combine(Path.GetDirectoryName destination, fi.Name)) |> ignore)
     state <- { state with project = FileInfo(destination) }
-      
-let [<When>] ``I install (.*)`` (packageId:string) =  
+
+let [<When>] ``I install (\S*) version (\S*)`` (packageId:string) (version:string) =
+    state <- { state with package = packageId; expectedVersion = Some version }
+    InstallReferenceOfSpecificVersion state.project.FullName packageId (NuGet.SemanticVersion(version))
+
+let [<When>] ``I install (\S*)$`` (packageId:string) =  
     state <- { state with package = packageId }
     InstallReference state.project.FullName packageId
 
@@ -69,11 +74,20 @@ let [<When>] ``remove (.*)`` (packageId:string) =
 let [<When>] ``I restore a project with (.*)`` (packageId:string) =
     state <- { state with package = packageId }
     RestoreReferences state.project.FullName
+
+let [<When>] ``I update (\S*)$`` (packageId:string) =
+    state <- { state with expectedVersion = None }
+    UpdateReference state.project.FullName packageId
       
 let [<Then>] ``the package (should|should not) be installed in the right directory`` (should : string) =
     let packagesDir = DirectoryInfo(Path.Combine(state.project.Directory.FullName, "packages"))
     if packagesDir.Exists then
-        let isDir = packagesDir.GetDirectories() |> Seq.exists (fun di -> di.Name.StartsWith state.package)
+        let isDir = 
+            match state.expectedVersion with
+            | None ->
+                packagesDir.GetDirectories() |> Seq.exists (fun di -> di.Name.StartsWith state.package)
+            | Some version ->
+                packagesDir.GetDirectories() |> Seq.exists (fun di -> di.Name = state.package + "." + version)
         match should with
         | "should" -> Assert.IsTrue isDir
         | "should not" -> Assert.IsFalse isDir
