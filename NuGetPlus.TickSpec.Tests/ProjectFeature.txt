@@ -14,9 +14,9 @@ Scenario outline: Installing should work
 	| CsProj		| packages			|
 	| CsProj		| no packages		|
 
-Scenario outline: Installing should work
+Scenario outline: Installing specific versions should work
 	Given a <project type> with <existing packages>
-	When I install Nuget.Core
+	When I install Nuget.Core version 2.2.0
 	Then the package should be installed in the right directory
 	And the reference should be added to the project file
 	And the package should be added to the packages.config file
@@ -27,6 +27,21 @@ Scenario outline: Installing should work
 	| FsProj		| no packages		|
 	| CsProj		| packages			|
 	| CsProj		| no packages		|
+
+Scenario outline: Installing the same package to multiple projects should work
+	Given a restored first <project type> with packages
+	Given a restored second <project type 2> with <existing packages>
+	When I install <nuget id>
+	Then the package should be installed in the shared directory
+	And the reference should be added to the project file
+	And the package should be added to the packages.config file
+
+	Examples:
+	| project type	| project type 2	| existing packages	| nuget id			|
+	| FsProj		| FsProj			| no packages		| Newtonsoft.Json	|
+	| FsProj		| CsProj			| packages			| Newtonsoft.Json	|
+	| CsProj		| CsProj			| no packages		| Ninject			|
+	| CsProj		| FsProj			| packages			| Ninject			|
 
 Scenario outline: Restore should work
 	Given a <project type> with packages
@@ -50,3 +65,18 @@ Scenario outline: Removing should work
 	| project type	| nuget id			|
 	| FsProj		| Newtonsoft.Json	|
 	| CsProj		| Ninject			|
+
+Scenario outline: Updating should work
+	Given a <project type> with <existing packages>
+	When I install Nuget.Core version 2.2.0
+	When I update NuGet.Core
+	Then the package should be installed in the right directory
+	And the reference should be added to the project file
+	And the package should be added to the packages.config file
+
+	Examples:
+	| project type	| existing packages	|
+	| FsProj		| packages			|
+	| FsProj		| no packages		|
+	| CsProj		| packages			|
+	| CsProj		| no packages		|

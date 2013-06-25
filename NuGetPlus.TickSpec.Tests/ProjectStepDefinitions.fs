@@ -1,9 +1,11 @@
-﻿module NuGetPlus.TickSpec.Tests.ProjectDefinitions
+﻿[<TickSpec.StepScope(Feature="Project level operations should work")>]
+module NuGetPlus.TickSpec.Tests.ProjectDefinitions
 
 open TickSpec
 open NUnit.Framework
 open System
 open System.IO
+open Microsoft.Build.Evaluation
 open ReferenceManagement
 
 let testProjectDir =
@@ -26,19 +28,24 @@ let ensureWorkingDirectory () =
 
 let packagesDir = DirectoryInfo(Path.Combine(testProjectDir.FullName, "packages"))
 
-let cleanWorkingPackagesDirectory () =
-    if packagesDir.Exists then
-        packagesDir.Delete(true)
-
 type State =
     {
         project : FileInfo
         package : string
+        expectedVersion : Option<string>
     }
 
-let mutable state = { project = FileInfo("."); package = "" }
+let mutable state = { project = FileInfo("."); package = ""; expectedVersion = None }
 
-let [<Given>] ``a (.*) with (packages|no packages)`` (projType:string) (hasPackages:string) = 
+let [<AfterScenario>] TearDownScenario () =
+    let projFiles = workingDir.GetFileSystemInfos "*.*proj"
+    projFiles |> Seq.iter (fun proj -> ProjectCollection.GlobalProjectCollection.GetLoadedProjects(proj.FullName) |> Seq.iter ProjectCollection.GlobalProjectCollection.UnloadProject)    
+    if workingDir.Exists then
+        workingDir.Delete(true)
+    workingDir.Create()
+    state <- { project = FileInfo("."); package = ""; expectedVersion = None }
+
+let constructWorkingProject projType hasPackages destinationDir shared =
     let midFix =
         match hasPackages with
         | "packages" -> ".WithPackages."
@@ -49,16 +56,38 @@ let [<Given>] ``a (.*) with (packages|no packages)`` (projType:string) (hasPacka
         |> Seq.filter (fun fi -> fi.Name = projType + midFix + (projType.ToLower()))
         |> Seq.head
     ensureWorkingDirectory ()
-    cleanWorkingPackagesDirectory ()
-    let destination = Path.Combine(workingDir.FullName, Guid.NewGuid().ToString(), example.Name)
-    let projDir = Directory.CreateDirectory(Path.GetDirectoryName destination)
-    let nugetConfig = FileInfo(Path.Combine(testProjectDir.FullName, "nuget.config"))
-    nugetConfig.CopyTo(Path.Combine(projDir.FullName, "nuget.config")) |> ignore
+    let destination = Path.Combine(destinationDir, example.Name)
+    let projDir = DirectoryInfo(Path.GetDirectoryName destination)
+    if projDir.Exists then
+        projDir.Delete(true)
+    projDir.Create()
+    if shared then
+        let nugetConfig = FileInfo(Path.Combine(testProjectDir.FullName, "nuget.config"))
+        let destination = Path.Combine(projDir.Parent.FullName, "nuget.config")
+        if not <| File.Exists destination then
+            nugetConfig.CopyTo(destination) |> ignore
+    else
+        let nugetConfig = FileInfo(Path.Combine(testProjectDir.FullName, "nuget.config"))
+        nugetConfig.CopyTo(Path.Combine(projDir.FullName, "nuget.config")) |> ignore
     example.Directory.GetFiles()
     |> Seq.iter (fun fi -> fi.CopyTo(Path.Combine(Path.GetDirectoryName destination, fi.Name)) |> ignore)
     state <- { state with project = FileInfo(destination) }
-      
-let [<When>] ``I install (.*)`` (packageId:string) =  
+
+let [<Given>] ``a (\w*) with (packages|no packages)`` (projType:string) (hasPackages:string) = 
+    let destinationDir = Path.Combine(workingDir.FullName, Guid.NewGuid().ToString())
+    constructWorkingProject projType hasPackages destinationDir false
+
+let [<Given>] ``a (|restored )(\w*) (\w*) with (packages|no packages)`` (restored:string) (ordinal:string) (projType:string) (hasPackages:string) =
+    let destinationDir = Path.Combine(workingDir.FullName, ordinal)
+    constructWorkingProject projType hasPackages destinationDir true
+    if restored = "restored " then
+        RestoreReferences state.project.FullName
+
+let [<When>] ``I install (\S*) version (\S*)`` (packageId:string) (version:string) =
+    state <- { state with package = packageId; expectedVersion = Some version }
+    InstallReferenceOfSpecificVersion state.project.FullName packageId (NuGet.SemanticVersion(version))
+
+let [<When>] ``I install (\S*)$`` (packageId:string) =  
     state <- { state with package = packageId }
     InstallReference state.project.FullName packageId
 
@@ -69,11 +98,26 @@ let [<When>] ``remove (.*)`` (packageId:string) =
 let [<When>] ``I restore a project with (.*)`` (packageId:string) =
     state <- { state with package = packageId }
     RestoreReferences state.project.FullName
+
+let [<When>] ``I update (\S*)$`` (packageId:string) =
+    state <- { state with expectedVersion = None }
+    UpdateReference state.project.FullName packageId
       
-let [<Then>] ``the package (should|should not) be installed in the right directory`` (should : string) =
-    let packagesDir = DirectoryInfo(Path.Combine(state.project.Directory.FullName, "packages"))
+let [<Then>] ``the package (should|should not) be installed in the (right|shared) directory`` (should : string) (shared : string) =
+    let packagesDir =
+        match shared with
+        | "right" ->
+            DirectoryInfo(Path.Combine(state.project.Directory.FullName, "packages"))
+        | "shared" ->
+            DirectoryInfo(Path.Combine(state.project.Directory.Parent.FullName, "packages"))
+        | _ -> failwith "Unknown local repository type"
     if packagesDir.Exists then
-        let isDir = packagesDir.GetDirectories() |> Seq.exists (fun di -> di.Name.StartsWith state.package)
+        let isDir = 
+            match state.expectedVersion with
+            | None ->
+                packagesDir.GetDirectories() |> Seq.exists (fun di -> di.Name.StartsWith state.package)
+            | Some version ->
+                packagesDir.GetDirectories() |> Seq.exists (fun di -> di.Name = state.package + "." + version)
         match should with
         | "should" -> Assert.IsTrue isDir
         | "should not" -> Assert.IsFalse isDir
@@ -85,7 +129,11 @@ let [<Then>] ``the package (should|should not) be installed in the right directo
         | _ -> failwith "Unknown should option"
 
 let [<Then>] ``the reference (should|should not) be added to the project file`` (should : string) =     
-    state.project.OpenText().ReadToEnd().Contains(state.package)
+    let content =
+        using
+            (state.project.OpenText())
+            (fun proj -> proj.ReadToEnd())
+    content.Contains(state.package)
     |>
         match should with
         | "should" -> Assert.IsTrue
@@ -94,7 +142,11 @@ let [<Then>] ``the reference (should|should not) be added to the project file`` 
 
 let [<Then>] ``the package (should|should not) be added to the packages.config file`` (should : string) =     
     let packagesConfig = FileInfo(Path.Combine(state.project.Directory.FullName, "packages.config"))
-    packagesConfig.OpenText().ReadToEnd().Contains(state.package)
+    let content =
+        using
+            (packagesConfig.OpenText())
+            (fun config -> config.ReadToEnd())
+    content.Contains(state.package)
     |>
         match should with
         | "should" -> Assert.IsTrue
