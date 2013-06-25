@@ -29,10 +29,10 @@ Scenario outline: Installing specific versions should work
 	| CsProj		| no packages		|
 
 Scenario outline: Installing the same package to multiple projects should work
-	Given a first <project type> with packages
-	Given a second <project type 2> with <existing packages>
+	Given a restored first <project type> with packages
+	Given a restored second <project type 2> with <existing packages>
 	When I install <nuget id>
-	Then the package should be installed in the right directory
+	Then the package should be installed in the shared directory
 	And the reference should be added to the project file
 	And the package should be added to the packages.config file
 

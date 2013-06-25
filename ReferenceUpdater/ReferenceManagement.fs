@@ -241,7 +241,7 @@ let InstallReferenceOfSpecificVersion projectName packageId (version : SemanticV
     let manager = GetManager projectName
     let ok, package = manager.LocalRepository.TryFindPackage(packageId, version)
     if ok then
-        manager.Logger.Log(MessageLevel.Debug, "LocalRepository already contains package {0}, installing files.", packageId)
+        manager.Logger.Log(MessageLevel.Info, "LocalRepository already contains package {0}, installing files.", packageId)
         let project = ProjectSystem(projectName) :> IProjectSystem
         InstallToPackagesConfigFile package project
         AddFilesToProj (manager.PathResolver.GetInstallPath package) package project
@@ -250,10 +250,10 @@ let InstallReferenceOfSpecificVersion projectName packageId (version : SemanticV
 
 let InstallReference projectName packageId =
     let manager = GetManager projectName
-    let latest = manager.SourceRepository.FindPackage(packageId)
+    let latest = manager.SourceRepository.FindPackage(packageId, VersionSpec(), false, false)
     let ok, package = manager.LocalRepository.TryFindPackage(latest.Id, latest.Version)
     if ok then
-        manager.Logger.Log(MessageLevel.Debug, "LocalRepository already contains package {0}, installing files.", packageId)
+        manager.Logger.Log(MessageLevel.Info, "LocalRepository already contains package {0}, installing files.", packageId)
         let project = ProjectSystem(projectName) :> IProjectSystem
         InstallToPackagesConfigFile package project
         AddFilesToProj (manager.PathResolver.GetInstallPath package) package project

@@ -42,6 +42,11 @@
     <Compile Include="Fixtures.fs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="EnvDTE">
+      <HintPath>..\lib\EnvDTE.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build" />
+    <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
