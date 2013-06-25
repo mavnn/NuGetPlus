@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ReferenceUpdater", "ReferenceUpdater\ReferenceUpdater.fsproj", "{FDC4BDD6-B4A4-44EF-8127-E90B8D09C54E}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NuGetPlus.ReferenceUpdater", "ReferenceUpdater\NuGetPlus.ReferenceUpdater.fsproj", "{FDC4BDD6-B4A4-44EF-8127-E90B8D09C54E}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NuGetPlus", "NuGetPlus\NuGetPlus.fsproj", "{7B00C7B9-983C-4645-B726-CA6276DE6446}"
 EndProject

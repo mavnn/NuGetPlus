@@ -1,4 +1,4 @@
-﻿module ReferenceManagement
+﻿module NuGetPlus.ProjectManagement
 open System
 open System.Collections.Generic
 open System.IO

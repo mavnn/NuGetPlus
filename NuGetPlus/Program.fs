@@ -1,7 +1,7 @@
 ﻿module NuGetPlay.Main
 open System
 open NuGet
-open ReferenceManagement
+open NuGetPlus.ProjectManagement
 open UnionArgParser
 
 type Argument =

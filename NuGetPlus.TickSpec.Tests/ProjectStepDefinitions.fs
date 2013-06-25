@@ -6,7 +6,7 @@ open NUnit.Framework
 open System
 open System.IO
 open Microsoft.Build.Evaluation
-open ReferenceManagement
+open NuGetPlus.ProjectManagement
 
 let testProjectDir =
     let TestProjectDirName = "TestProjects"
@@ -102,6 +102,10 @@ let [<When>] ``I restore a project with (.*)`` (packageId:string) =
 let [<When>] ``I update (\S*)$`` (packageId:string) =
     state <- { state with expectedVersion = None }
     UpdateReference state.project.FullName packageId
+      
+let [<When>] ``I update (\S*) to version (.*)$`` (packageId : string) (version : string) =
+    state <- { state with expectedVersion = Some version }
+    UpdateReferenceToSpecificVersion state.project.FullName packageId (NuGet.SemanticVersion(version))
       
 let [<Then>] ``the package (should|should not) be installed in the (right|shared) directory`` (should : string) (shared : string) =
     let packagesDir =

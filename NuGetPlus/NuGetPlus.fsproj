@@ -68,8 +68,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ReferenceUpdater\ReferenceUpdater.fsproj">
-      <Name>ReferenceUpdater</Name>
+    <ProjectReference Include="..\ReferenceUpdater\NuGetPlus.ReferenceUpdater.fsproj">
+      <Name>NuGetPlus.ReferenceUpdater</Name>
       <Project>{fdc4bdd6-b4a4-44ef-8127-e90b8d09c54e}</Project>
       <Private>True</Private>
     </ProjectReference>
