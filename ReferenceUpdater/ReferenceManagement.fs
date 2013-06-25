@@ -214,12 +214,16 @@ let private GetManager projectName =
 type private RestorePackage = { Id : string; Version : SemanticVersion }
 
 let private getRestorePackages projectName =
-    use stream = File.OpenRead(Path.Combine(Path.GetDirectoryName(projectName), "packages.config"))
-    XDocument.Load(stream).Element(XName.Get "packages").Elements(XName.Get "package")
-    |> Seq.map (fun p -> {
-                            Id = p.Attribute(XName.Get "id").Value
-                            Version = SemanticVersion(p.Attribute(XName.Get "version").Value)
-                         })
+    let packagesConfig = Path.Combine(Path.GetDirectoryName(projectName), "packages.config")
+    if File.Exists packagesConfig then
+        use stream = File.OpenRead(packagesConfig)
+        XDocument.Load(stream).Element(XName.Get "packages").Elements(XName.Get "package")
+        |> Seq.map (fun p -> {
+                                Id = p.Attribute(XName.Get "id").Value
+                                Version = SemanticVersion(p.Attribute(XName.Get "version").Value)
+                             })
+    else
+        Seq.empty
 
 let UpdateReferenceToSpecificVersion projectName packageId (version : SemanticVersion) =
     let pm = GetManager projectName
