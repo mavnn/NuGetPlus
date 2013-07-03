@@ -42,9 +42,6 @@
     <Compile Include="Fixtures.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="EnvDTE">
-      <HintPath>..\lib\EnvDTE.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="mscorlib" />
