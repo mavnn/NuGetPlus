@@ -7,7 +7,7 @@ let packExe () =
     let tools = environVar "tools"
     let versionRegex = Regex(@"AssemblyInformationalVersion\(\""(?<version>.*)\""\)")
     let version = 
-        ReadFileAsString ("NuGetPlus" @@ "AssemblyInfo.fs")
+        ReadFileAsString ("NuGetPlus.Console" @@ "AssemblyInfo.fs")
         |> versionRegex.Match
         |> (fun m -> m.Groups.["version"].Value)
     let setNugetParams param =
