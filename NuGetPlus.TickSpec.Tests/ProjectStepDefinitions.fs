@@ -41,7 +41,14 @@ let [<AfterScenario>] TearDownScenario () =
     let projFiles = workingDir.GetFileSystemInfos "*.*proj"
     projFiles |> Seq.iter (fun proj -> ProjectCollection.GlobalProjectCollection.GetLoadedProjects(proj.FullName) |> Seq.iter ProjectCollection.GlobalProjectCollection.UnloadProject)    
     if workingDir.Exists then
-        workingDir.Delete(true)
+        // This often throws a random error as it tries to delete the directory
+        // before file deletion has finished. So we try again.
+        try
+            workingDir.Delete(true)
+        with
+        | _ ->
+            Threading.Thread.Sleep(200)
+            workingDir.Delete(true)
     workingDir.Create()
     state <- { project = FileInfo("."); package = ""; expectedVersion = None }
 
