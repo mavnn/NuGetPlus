@@ -36,8 +36,8 @@ type ProjectSystem (projectFile : string) =
             project.AddItem("Reference", includeName, [| KeyValuePair("HintPath", relPath) |]) |> ignore
             project.Save ()
         member x.AddFrameworkReference name =
-            // Currently a no-op in the NuGet code :(
-            ()
+            project.AddItem("Reference", name) |> ignore
+            project.Save ()
         member x.ReferenceExists path =
             match GetReference path with
             | Some _ -> true

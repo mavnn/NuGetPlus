@@ -100,6 +100,10 @@ let private AddFilesToProj packageInstallPath package project =
     let filteredAssemblyReferences =
         getFilteredAssemblies package project assemblyReferences
     project.AddFiles(contentFiles, fileTransformers)
+    frameworkReferences
+    |> Seq.filter (fun f -> not <| project.ReferenceExists(f.AssemblyName))
+    |> Seq.iter (fun f -> project.AddFrameworkReference(f.AssemblyName))
+
     filteredAssemblyReferences
     |> Seq.filter (fun a -> not <| a.IsEmptyFolder())
     |> Seq.iter (fun a ->
