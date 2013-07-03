@@ -23,3 +23,4 @@ type FeatureFixture (source:string) =
         definitions.GenerateScenarios(source,s)
 
 type ProjectFixture () = inherit FeatureFixture("ProjectFeature.txt")
+type SolutionFixture () = inherit FeatureFixture("SolutionFeature.txt")

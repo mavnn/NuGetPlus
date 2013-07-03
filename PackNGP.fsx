@@ -21,7 +21,7 @@ let packExe () =
                     PublishUrl = environVarOrDefault "pushurl" ""
                     NoPackageAnalysis = true
                     Publish = not isLocalBuild }
-    NuGetPack setNugetParams ("NuGetPlus" @@ "ngp.nuspec")
+    NuGetPack setNugetParams ("NuGetPlus.Console" @@ "ngp.nuspec")
     if not isLocalBuild then
         NuGetPublish setNugetParams
 

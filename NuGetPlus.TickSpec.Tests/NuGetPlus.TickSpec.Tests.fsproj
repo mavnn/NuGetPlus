@@ -37,11 +37,19 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <ItemGroup>
     <None Include="packages.config" />
+    <Compile Include="TestUtilities.fs" />
     <Compile Include="ProjectStepDefinitions.fs" />
     <Content Include="ProjectFeature.txt" />
+    <Compile Include="SolutionStepDefinitions.fs" />
+    <Content Include="SolutionFeature.txt" />
     <Compile Include="Fixtures.fs" />
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FsUnit.NUnit">
+      <HintPath>..\packages\FsUnit.1.2.1.0\Lib\Net40\FsUnit.NUnit.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="mscorlib" />

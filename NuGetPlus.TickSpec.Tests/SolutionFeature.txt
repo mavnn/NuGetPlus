@@ -1,0 +1,7 @@
+﻿Feature: Solution level operations should work
+
+Scenario: Loading a solution should find the projects
+	Given a solution called CsProj.NoPackages
+	When I ask for the project list
+	Then the project list should contain CsProj.NoPackages.csproj
+	And CsProj.NoPackages.csproj should be in a directory called CsProj.NoPackages
