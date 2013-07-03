@@ -1,5 +1,5 @@
 ﻿[<AutoOpen>]
-module ProjectSystem
+module NuGetPlus.ProjectSystem
 open System
 open System.IO
 open System.Collections.Generic

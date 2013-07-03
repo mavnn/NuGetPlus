@@ -67,8 +67,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ReferenceUpdater\NuGetPlus.ReferenceUpdater.fsproj">
-      <Name>NuGetPlus.ReferenceUpdater</Name>
+    <ProjectReference Include="..\NuGetPlus.Core\NuGetPlus.Core.fsproj">
+      <Name>NuGetPlus.Core</Name>
       <Project>{fdc4bdd6-b4a4-44ef-8127-e90b8d09c54e}</Project>
       <Private>True</Private>
     </ProjectReference>

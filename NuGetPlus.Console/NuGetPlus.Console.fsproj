@@ -5,12 +5,12 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>fdc4bdd6-b4a4-44ef-8127-e90b8d09c54e</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>ReferenceUpdater</RootNamespace>
-    <AssemblyName>NuGetPlus.ReferenceUpdater</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <Name>NuGetPlus.ReferenceUpdater</Name>
+    <ProjectGuid>7b00c7b9-983c-4645-b726-ca6276de6446</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>NuGetPlus</RootNamespace>
+    <AssemblyName>ngp</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <Name>NuGetPlus.Console</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -21,7 +21,10 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\ReferenceUpdater.XML</DocumentationFile>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DocumentationFile>bin\Debug\NuGetPlus.XML</DocumentationFile>
+    <Prefer32Bit>true</Prefer32Bit>
+    <StartArguments>--action install --projectfile C:\MJN\AliasAndUnits\AliasAndUnits\AliasAndUnits.fsproj --packageid EasyNetQ</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,11 +33,14 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\ReferenceUpdater.XML</DocumentationFile>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DocumentationFile>bin\Release\NuGetPlus.XML</DocumentationFile>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EnvDTE">
       <HintPath>..\lib\EnvDTE.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.Build.Framework" />
@@ -50,14 +56,23 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="UnionArgParser">
+      <HintPath>..\packages\UnionArgParser.0.5.2\lib\net45\UnionArgParser.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="XmlTransformer.fs" />
-    <Compile Include="ProjectSystem.fs" />
-    <Compile Include="ProjectManagement.fs" />
-    <None Include="Script.fsx" />
-    <None Include="packages.config" />
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Program.fs" />
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NuGetPlus.Core\NuGetPlus.Core.fsproj">
+      <Name>NuGetPlus.Core</Name>
+      <Project>{fdc4bdd6-b4a4-44ef-8127-e90b8d09c54e}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
