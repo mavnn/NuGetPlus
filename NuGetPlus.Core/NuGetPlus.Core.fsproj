@@ -33,9 +33,6 @@
     <DocumentationFile>bin\Release\ReferenceUpdater.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EnvDTE">
-      <HintPath>..\lib\EnvDTE.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="mscorlib" />
