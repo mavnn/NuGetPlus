@@ -1,4 +1,5 @@
-﻿module ReferenceManagement
+﻿[<System.Obsolete("Please switch to the NuGetPlus.Core package, this package is now discountinued.")>]
+module ReferenceManagement
 open System
 open System.Collections.Generic
 open System.IO
