@@ -92,4 +92,5 @@ let [<Then>] ``the project list should contain (.*)`` (projectName : string) =
 let [<Then>] ``(.*) should be in a directory called (.*)`` (projectName : string) (directoryName : string) =
     state.ProjectList
     |> Seq.find (fun name -> name.Contains(projectName))
-    |> should startWith directoryName
+    |> fun p -> FileInfo(p).Directory.Name
+    |> should equal directoryName
