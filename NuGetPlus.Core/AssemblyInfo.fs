@@ -3,7 +3,7 @@ namespace NuGetPlus.ReferenceUpdater
 open System.Reflection
 open System.Runtime.InteropServices
 
-[<assembly: AssemblyTitle("NuGetPlus.ReferenceUpdater")>]
+[<assembly: AssemblyTitle("NuGetPlus.Core")>]
 [<assembly: AssemblyDescription("")>]
 [<assembly: AssemblyConfiguration("Release")>]
 [<assembly: AssemblyCompany("Michael Newton")>]

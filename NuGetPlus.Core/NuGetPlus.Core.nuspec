@@ -12,9 +12,9 @@
     <description>DLL for adding, removing, restoring, updating and downgrading NuGet references.</description>
     <copyright>Copyright 2013</copyright>
     <frameworkAssemblies>
-        <frameworkAssembly>FSharp.Core</frameworkAssembly>
-        <frameworkAssembly>Microsoft.Build</frameworkAssembly>
-        <frameworkAssembly>Microsoft.Build.Framework</frameworkAssembly>
+        <frameworkAssembly assemblyName="FSharp.Core" />
+        <frameworkAssembly assemblyName="Microsoft.Build" />
+        <frameworkAssembly assemblyName="Microsoft.Build.Framework" />
     </frameworkAssemblies>
   </metadata>
 </package>

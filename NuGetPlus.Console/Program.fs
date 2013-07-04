@@ -2,12 +2,13 @@
 
 open System
 open NuGet
+open NuGetPlus
 open NuGetPlus.ProjectManagement
 open UnionArgParser
 
 type Argument = 
     | Action of string
-    | ProjectFile of string
+    | File of string
     | PackageId of string
     | Version of string
     interface IArgParserTemplate with
@@ -15,7 +16,7 @@ type Argument =
             match s with
             | Action _ -> 
                 "Specify an action: Install, Remove, Restore or Update"
-            | ProjectFile _ -> "Path to project file to update."
+            | File _ -> "Path to project/solution file to update."
             | PackageId _ -> "NuGet package id for action."
             | Version _ -> "Optional specific version of package."
 
@@ -24,6 +25,7 @@ type ActionType =
     | Remove
     | Restore
     | Update
+    | SolutionRestore
 
 let processAction(a : string) = 
     match a.ToLower() with
@@ -31,14 +33,15 @@ let processAction(a : string) =
     | "remove" -> Remove
     | "restore" -> Restore
     | "update" -> Update
+    | "solutionrestore" -> SolutionRestore
     | _ -> 
         failwith 
-            "Invalid Action; please use install, remove, restore or update."
+            "Invalid Action; please use install, remove, restore, update or solutionrestore."
 
 let processProjectFile(f : string) = 
     match IO.File.Exists(f) with
-    | true -> f
-    | false -> failwith "ProjectFile does not exist."
+    | true -> IO.Path.GetFullPath f
+    | false -> failwith "File does not exist."
 
 let processVersion(v : string) = SemanticVersion(v)
 
@@ -48,12 +51,12 @@ let main argv =
         let parser = UnionArgParser<Argument>()
         let results = parser.Parse()
         let action = results.PostProcessResult <@ Action @> processAction
-        let proj = 
-            results.PostProcessResult <@ ProjectFile @> processProjectFile
+        let file = 
+            results.PostProcessResult <@ File @> processProjectFile
         let maybePackage = results.TryGetResult <@ PackageId @>
         let version = results.TryPostProcessResult <@ Version @> processVersion
         printfn "Action type: %A" action
-        printfn "Project file: %s" proj
+        printfn "File: %s" file
         match maybePackage with
         | Some package -> printfn "Package ID: %s" package
         | None -> ()
@@ -67,24 +70,31 @@ let main argv =
         match action with
         | Install -> 
             match version with
-            | None -> InstallReference proj (checkPackage maybePackage)
+            | None -> InstallReference file (checkPackage maybePackage)
             | Some v -> 
-                InstallReferenceOfSpecificVersion proj 
+                InstallReferenceOfSpecificVersion file
                     (checkPackage maybePackage) v
         | Update -> 
             match version with
-            | None -> UpdateReference proj (checkPackage maybePackage)
+            | None -> UpdateReference file (checkPackage maybePackage)
             | Some v -> 
-                UpdateReferenceToSpecificVersion proj 
+                UpdateReferenceToSpecificVersion file
                     (checkPackage maybePackage) v
-        | Remove -> RemoveReference proj (checkPackage maybePackage)
+        | Remove -> RemoveReference file (checkPackage maybePackage)
         | Restore -> 
             match maybePackage with
             | Some package -> 
                 failwith 
                     "PackageId provided for restore action - restore will always restore the whole packages.config"
             | None -> ()
-            RestoreReferences proj
+            RestoreReferences file
+        | SolutionRestore ->
+            match maybePackage with
+            | Some package -> 
+                failwith 
+                    "PackageId provided for solution restore action - restore will always restore the whole solution."
+            | None -> ()
+            SolutionManagement.RestorePackages file
         0
     with
     | ex -> 

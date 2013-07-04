@@ -8,6 +8,7 @@ open System
 open System.IO
 open Microsoft.Build.Evaluation
 open NuGetPlus.SolutionManagement
+open NuGet
 
 type State = 
     { Solution : FileInfo;
@@ -27,16 +28,19 @@ let TearDownScenario() =
                    (proj.FullName) 
                |> Seq.iter 
                       ProjectCollection.GlobalProjectCollection.UnloadProject)
-    if workingDir.Exists then 
-        // This often throws a random error as it tries to delete the directory
-        // before file deletion has finished. So we try again.
-        try 
-            workingDir.Delete(true)
-        with
-        | _ -> 
-            Threading.Thread.Sleep(200)
-            workingDir.Delete(true)
-    workingDir.Create()
+    let CleanDir (dir : DirectoryInfo) =
+        if dir.Exists then 
+            // This often throws a random error as it tries to delete the directory
+            // before file deletion has finished. So we try again.
+            try 
+                dir.Delete(true)
+            with
+            | _ -> 
+                Threading.Thread.Sleep(200)
+                dir.Delete(true)
+        dir.Create()
+    CleanDir workingDir
+    CleanDir packagesDir
 
 let constructWorkingSolution name destinationDir shared = 
     let example = 
@@ -87,6 +91,11 @@ let ``a solution called (.*)``(solution : string) =
 let ``I ask for the project list``() = 
     state <- { state with ProjectList = GetProjects state.Solution.FullName }
 
+[<When>]
+let ``I restore`` () =
+    let solution = state.Solution
+    RestorePackages <| solution.FullName
+
 [<Then>]
 let ``the project list should contain (.*)``(projectName : string) = 
     state.ProjectList
@@ -100,3 +109,9 @@ let ``(.*) should be in a directory called (.*)`` (projectName : string)
     |> Seq.find(fun name -> name.Contains(projectName))
     |> fun p -> FileInfo(p).Directory.Name
     |> should equal directoryName
+
+[<Then>]
+let ``the local repository should contain (.*) (.*)`` (package : string) (version : string) =
+    let localRepo = SharedPackageRepository(packagesDir.FullName)
+    let ok, _ = localRepo.TryFindPackage(package, SemanticVersion(version))
+    ok |> should be True

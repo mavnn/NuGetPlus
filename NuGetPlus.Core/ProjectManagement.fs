@@ -230,49 +230,10 @@ let private InstallToPackagesConfigFile (package : IPackage)
     SortPackages configDoc
     project.AddFile(fileName, fun (s : Stream) -> configDoc.Save(s))
 
-let private inferRepositoryDirectory projectDir = 
-    let rec inner(currentDir : DirectoryInfo) = 
-        if Array.length(currentDir.GetFiles("*.sln")) > 0 then Some currentDir
-        else if currentDir.Parent <> null then inner currentDir.Parent
-        else None
-    let solutionDir = inner <| DirectoryInfo(projectDir)
-    match solutionDir with
-    | Some dir -> Path.Combine(dir.FullName, "packages")
-    | None -> Path.Combine(projectDir, "packages")
-
-let private GetRawManager(projectName : string) = 
-    if String.IsNullOrWhiteSpace projectName then 
-        raise <| ArgumentException("projectName cannot be empty")
+let private GetManager projectName = 
     let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
     let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
-    let repositoryPath = 
-        match settings.GetRepositoryPath() with
-        | null -> inferRepositoryDirectory projectDir
-        | s -> s
-    printfn "repo path: %s" repositoryPath
-    let defaultPackageSource = PackageSource "https://nuget.org/api/v2/"
-    let packageSourceProvider = 
-        PackageSourceProvider(settings, [defaultPackageSource])
-    let remoteRepository = 
-        packageSourceProvider.GetAggregate(PackageRepositoryFactory())
-    let localRepository = SharedPackageRepository repositoryPath
-    let logger = 
-        { new ILogger with
-              member x.Log(level, message, parameters) = 
-                  Console.WriteLine
-                      ("[{0}] {1}", level.ToString(), 
-                       String.Format(message, parameters))
-              member x.ResolveFileConflict(message) = FileConflictResolution() }
-    let packageManager = 
-        PackageManager
-            (remoteRepository, 
-             DefaultPackagePathResolver(PhysicalFileSystem repositoryPath), 
-             PhysicalFileSystem repositoryPath, localRepository)
-    packageManager.Logger <- logger
-    packageManager
-
-let private GetManager projectName = 
-    let packageManager = GetRawManager projectName
+    let packageManager = GetRawManager (GetRepositoryPath projectName) settings
     let project = ProjectSystem(projectName) :> IProjectSystem
     packageManager.PackageInstalling.Add
         (fun ev -> InstallToPackagesConfigFile ev.Package project)
@@ -286,11 +247,7 @@ let private GetManager projectName =
         (fun ev -> UninstallFromPackagesConfigFile ev.Package.Id project)
     packageManager
 
-type private RestorePackage = 
-    { Id : string;
-      Version : SemanticVersion }
-
-let private getRestorePackages projectName = 
+let GetRestorePackages projectName = 
     let packagesConfig = 
         Path.Combine(Path.GetDirectoryName(projectName), "packages.config")
     if File.Exists packagesConfig then 
@@ -317,8 +274,8 @@ let UpdateReference projectName (packageId : string) =
     pm.UninstallPackage(existingPackage, true, true)
     pm.InstallPackage packageId
 
-let InstallReferenceOfSpecificVersion projectName packageId 
-    (version : SemanticVersion) = 
+let private installSpecificVersion projectName packageId 
+    (version : SemanticVersion) ignoreDeps = 
     let manager = GetManager projectName
     let ok, package = manager.LocalRepository.TryFindPackage(packageId, version)
     if ok then 
@@ -330,7 +287,13 @@ let InstallReferenceOfSpecificVersion projectName packageId
         InstallToPackagesConfigFile package project
         AddFilesToProj (manager.PathResolver.GetInstallPath package) package 
             project
-    else manager.InstallPackage(packageId, version, false, true)
+    else manager.InstallPackage(packageId, version, ignoreDeps, true)
+
+let InstallReferenceOfSpecificVersion projectName packageId version = 
+    installSpecificVersion projectName packageId version false
+
+let InstallReferenceOfSpecificVersionNoDependencies projectName packageId version =
+    installSpecificVersion projectName packageId version true
 
 let InstallReference projectName packageId = 
     let manager = GetManager projectName
@@ -351,14 +314,16 @@ let InstallReference projectName packageId =
     else manager.InstallPackage packageId
 
 let RestoreReferences projectName = 
-    let manager = GetRawManager projectName
-    let packages = getRestorePackages projectName
+    let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
+    let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
+    let manager = GetRawManager (GetRepositoryPath projectName) settings
+    let packages = GetRestorePackages projectName
     packages 
     |> Seq.iter(fun p -> manager.InstallPackage(p.Id, p.Version, false, true))
 
 let RemoveReference projectName (packageId : string) = 
     let manager = GetManager projectName
-    let restorePackages = getRestorePackages projectName
+    let restorePackages = GetRestorePackages projectName
     let version = (Seq.find (fun p -> p.Id = packageId) restorePackages).Version
     let package = manager.LocalRepository.FindPackage(packageId, version)
     manager.UninstallPackage(package, true, true)

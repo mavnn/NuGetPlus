@@ -28,16 +28,19 @@ let TearDownScenario() =
                    (proj.FullName) 
                |> Seq.iter 
                       ProjectCollection.GlobalProjectCollection.UnloadProject)
-    if workingDir.Exists then 
-        // This often throws a random error as it tries to delete the directory
-        // before file deletion has finished. So we try again.
-        try 
-            workingDir.Delete(true)
-        with
-        | _ -> 
-            Threading.Thread.Sleep(200)
-            workingDir.Delete(true)
-    workingDir.Create()
+    let CleanDir (dir : DirectoryInfo) =
+        if dir.Exists then 
+            // This often throws a random error as it tries to delete the directory
+            // before file deletion has finished. So we try again.
+            try 
+                dir.Delete(true)
+            with
+            | _ -> 
+                Threading.Thread.Sleep(200)
+                dir.Delete(true)
+        dir.Create()
+    CleanDir workingDir
+    CleanDir packagesDir
     state <- { project = FileInfo(".");
                package = "";
                expectedVersion = None }
