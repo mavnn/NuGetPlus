@@ -1,3 +1,7 @@
+## Version 2.0 release
+
+With breaking changes. Please check the [release notes](release_notes.md) 
+
 ## Repeatable NuGet actions
 
 This project aims to provide a NuGet wrapper with the following functionality, both via dll and via an easy to use command line interface:
@@ -10,14 +14,14 @@ This project aims to provide a NuGet wrapper with the following functionality, b
 
 As a 'meta-goal' we aim to be a dropin replacement, respecting things like nuget.config files in the same way as the official NuGet clients (with an exception for where those clients are subject to bugs).
 
-At this time, goals 1-4 are officially supported.
+At this time, goals 1-4 are officially supported. 5 only supports solution wide restore at this point, which it does in an efficient manner.
 
 There is a blog post that contains [more explaination on the project aims](http://mikehadlow.blogspot.co.uk/2013/06/guest-post-working-around-fnuget.html).
 
 ## Command line options available for ngp.exe
 
-    --action <string>: Specify an action: Install, Remove, Restore or Update
-    --projectfile <string>: Path to project file to update.
+    --action <string>: Specify an action: Install, Remove, Restore, Update and SolutionRestore
+    --file <string>: Path to project or solution file to update.
     --packageid <string>: NuGet package id for action.
     --version <string>: Optional specific version of package.
 
@@ -25,13 +29,16 @@ There is a blog post that contains [more explaination on the project aims](http:
 
 ngp.exe is a thin wrapper around the underlying dll, allowing the same operations to be called:
 
+Methods available in ProjectManagement are:
+
 ```fsharp
 // This is F# code but the dll can be referenced from other .net languages too.
 let packageName = "myPackage"
 let packageVersion = NuGet.SemanticVersion("10.0.2.0")
 let projectName = "myProject.fs"
 
-// Methods available are:
+open NuGetPlus.ProjectManagement
+
 InstallReference projectName packageName
 InstallReferenceOfSpecificVersion projectName packageName packageVersion
 UpdateReference projectName packageName
@@ -39,6 +46,19 @@ UpdateReferenceToSpecificVersion projectName packageName packageVersion
 RemoveReference projectName packageName
 RestoreReferences projectName
 ```
+
+Methods available in SolutionManagement are:
+
+```fsharp
+// This is F# code but the dll can be referenced from other .net languages too.
+let solutionName = "mySolution.fs"
+
+open NuGetPlus.SolutionManagement
+
+RestorePackages solutionName
+```
+
+Depending on the number of projects in your solution, this can be significantly faster (an order of magnitude or more) than restoring each packages.config in turn.
 
 ## Get involved!
 
