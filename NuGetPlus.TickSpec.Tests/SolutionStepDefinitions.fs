@@ -78,19 +78,25 @@ let constructWorkingSolution name destinationDir shared =
                |> ignore)
     state <- { state with Solution = example }
 
-let [<Given>] ``a solution called (.*)`` (solution : string) =
-    constructWorkingSolution solution (Path.Combine(workingDir.FullName, "TestSolution")) false
+[<Given>]
+let ``a solution called (.*)``(solution : string) = 
+    constructWorkingSolution solution 
+        (Path.Combine(workingDir.FullName, "TestSolution")) false
 
-let [<When>] ``I ask for the project list`` () =
+[<When>]
+let ``I ask for the project list``() = 
     state <- { state with ProjectList = GetProjects state.Solution.FullName }
 
-let [<Then>] ``the project list should contain (.*)`` (projectName : string) =
+[<Then>]
+let ``the project list should contain (.*)``(projectName : string) = 
     state.ProjectList
-    |> Seq.map (fun name -> FileInfo(name).Name)
+    |> Seq.map(fun name -> FileInfo(name).Name)
     |> should contain projectName
 
-let [<Then>] ``(.*) should be in a directory called (.*)`` (projectName : string) (directoryName : string) =
+[<Then>]
+let ``(.*) should be in a directory called (.*)`` (projectName : string) 
+    (directoryName : string) = 
     state.ProjectList
-    |> Seq.find (fun name -> name.Contains(projectName))
+    |> Seq.find(fun name -> name.Contains(projectName))
     |> fun p -> FileInfo(p).Directory.Name
     |> should equal directoryName
