@@ -13,7 +13,7 @@ open System.Runtime.InteropServices
 
 [<assembly: AssemblyVersion("2.0.0.0")>]
 [<assembly: AssemblyFileVersion("2.0.0.0")>]
-[<assembly: AssemblyInformationalVersion("2.0.0-develop-local")>]
+[<assembly: AssemblyInformationalVersion("2.0.0-master-local")>]
 
 [<assembly: ComVisible(false)>]
 

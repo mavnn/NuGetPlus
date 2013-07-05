@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>$id$</id>
+    <id>NuGetPlus.Core</id>
     <version>$version$</version>
     <title>NuGetPlus.Core</title>
     <authors>Michael Newton</authors>
@@ -9,7 +9,7 @@
     <licenseUrl>https://raw.github.com/mavnn/NuGetPlus/master/licence.txt</licenseUrl>
     <projectUrl>https://github.com/mavnn/NuGetPlus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>DLL for adding, removing, restoring, updating and downgrading NuGet references.</description>
+    <description>DLL for adding, removing, restoring, updating and downgrading NuGet references at project and solution level.</description>
     <copyright>Copyright 2013</copyright>
     <frameworkAssemblies>
         <frameworkAssembly assemblyName="FSharp.Core" />
