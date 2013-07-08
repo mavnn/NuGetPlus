@@ -274,7 +274,24 @@ let UpdateReference projectName (packageId : string) =
     pm.UninstallPackage(existingPackage, true, true)
     pm.InstallPackage packageId
 
-let private installSpecificVersion projectName packageId 
+let rec private installCachedDependency projectName (manager : PackageManager) 
+        (dependency : PackageDependency) = 
+    // reuse install dependencies if they exist; probably what's wanted
+    let matchingLocal = 
+        manager.LocalRepository.FindPackage
+            (dependency.Id, dependency.VersionSpec, true, true)
+    let installPackage = 
+        if matchingLocal <> null then matchingLocal
+        else 
+            manager.SourceRepository.FindPackage
+                (dependency.Id, dependency.VersionSpec, true, true)
+    if installPackage = null then 
+        failwith "No candidate found to match dependency %s %A" dependency.Id 
+            dependency.VersionSpec
+    installSpecificVersion projectName installPackage.Id installPackage.Version 
+        false
+
+and private installSpecificVersion projectName packageId 
     (version : SemanticVersion) ignoreDeps = 
     let manager = GetManager projectName
     let ok, package = manager.LocalRepository.TryFindPackage(packageId, version)
@@ -287,13 +304,18 @@ let private installSpecificVersion projectName packageId
         InstallToPackagesConfigFile package project
         AddFilesToProj (manager.PathResolver.GetInstallPath package) package 
             project
+        if not ignoreDeps then 
+            package.DependencySets
+            |> Seq.map(fun depSet -> depSet.Dependencies)
+            |> Seq.concat
+            |> Seq.iter
+                   (fun dep -> installCachedDependency projectName manager dep)
     else manager.InstallPackage(packageId, version, ignoreDeps, true)
 
 let InstallReferenceOfSpecificVersion projectName packageId version = 
     installSpecificVersion projectName packageId version false
-
-let InstallReferenceOfSpecificVersionNoDependencies projectName packageId version =
-    installSpecificVersion projectName packageId version true
+let InstallReferenceOfSpecificVersionNoDependencies projectName packageId 
+    version = installSpecificVersion projectName packageId version true
 
 let InstallReference projectName packageId = 
     let manager = GetManager projectName
