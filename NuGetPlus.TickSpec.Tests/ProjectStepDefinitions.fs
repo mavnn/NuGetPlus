@@ -28,7 +28,7 @@ let TearDownScenario() =
                    (proj.FullName) 
                |> Seq.iter 
                       ProjectCollection.GlobalProjectCollection.UnloadProject)
-    let CleanDir (dir : DirectoryInfo) =
+    let CleanDir(dir : DirectoryInfo) = 
         if dir.Exists then 
             // This often throws a random error as it tries to delete the directory
             // before file deletion has finished. So we try again.
@@ -127,9 +127,20 @@ let ``I update (\S*) to version (.*)$`` (packageId : string) (version : string) 
     UpdateReferenceToSpecificVersion state.project.FullName packageId 
         (NuGet.SemanticVersion(version))
 
+[<When>]
+let ``I delete the (\S*) package`` (package : string) = 
+    let packagesDir = 
+        DirectoryInfo
+            (Path.Combine(state.project.Directory.FullName, "packages"))
+    if packagesDir.Exists then 
+        let dir = 
+            packagesDir.GetDirectories() 
+            |> Seq.find(fun di -> di.Name.StartsWith state.package)
+        dir.Delete(true)
+
 [<Then>]
-let ``the package (should|should not) be installed in the (right|shared) directory`` (should : string) 
-    (shared : string) = 
+let ``(the package|\S*) (should|should not) be installed in the (right|shared) directory`` (package : string) 
+    (should : string) (shared : string) = 
     let packagesDir = 
         match shared with
         | "right" -> 
@@ -141,6 +152,10 @@ let ``the package (should|should not) be installed in the (right|shared) directo
                      (state.project.Directory.Parent.FullName, "packages"))
         | _ -> failwith "Unknown local repository type"
     if packagesDir.Exists then 
+        let packageName = 
+            match package with
+            | "the package" -> state.package
+            | s -> s
         let isDir = 
             match state.expectedVersion with
             | None -> 
@@ -148,7 +163,7 @@ let ``the package (should|should not) be installed in the (right|shared) directo
                 |> Seq.exists(fun di -> di.Name.StartsWith state.package)
             | Some version -> 
                 packagesDir.GetDirectories() 
-                |> Seq.exists(fun di -> di.Name = state.package + "." + version)
+                |> Seq.exists(fun di -> di.Name = packageName + "." + version)
         match should with
         | "should" -> Assert.IsTrue isDir
         | "should not" -> Assert.IsFalse isDir

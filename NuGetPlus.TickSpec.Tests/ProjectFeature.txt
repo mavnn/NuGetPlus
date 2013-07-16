@@ -56,7 +56,7 @@ Scenario outline: Restore should work
 Scenario outline: Removing should work
 	Given a <project type> with packages
 	When I restore a project with <nuget id>
-	When I remove <nuget id>
+	And I remove <nuget id>
 	Then the package should not be installed in the right directory
 	And the reference should not be added to the project file
 	And the package should not be added to the packages.config file
@@ -69,7 +69,7 @@ Scenario outline: Removing should work
 Scenario outline: Updating should work
 	Given a <project type> with <existing packages>
 	When I install Nuget.Core version 2.2.0
-	When I update NuGet.Core
+	And I update NuGet.Core
 	Then the package should be installed in the right directory
 	And the reference should be added to the project file
 	And the package should be added to the packages.config file
@@ -84,10 +84,24 @@ Scenario outline: Updating should work
 Scenario outline: Downgrading should work
 	Given a <project type> with <existing packages>
 	When I install Nuget.Core version 2.5.0
-	When I update NuGet.Core to version 2.2.0
+	And I update NuGet.Core to version 2.2.0
 	Then the package should be installed in the right directory
 	And the reference should be added to the project file
 	And the package should be added to the packages.config file
+
+	Examples:
+	| project type	| existing packages	|
+	| FsProj		| packages			|
+	| FsProj		| no packages		|
+	| CsProj		| packages			|
+	| CsProj		| no packages		|
+
+Scenario outline: Installing packages with dependencies works even if they're cached
+	Given a <project type> with <existing packages>
+	When I install NuGetPlus.Core
+	And I delete the NuGet.Core package
+	And I install NuGetPlus.Core
+	Then NuGet.Core should be installed in the right directory
 
 	Examples:
 	| project type	| existing packages	|
