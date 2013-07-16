@@ -18,7 +18,7 @@ let private inferRepositoryDirectory projectDir =
 type RepositoryPath = | RepositoryPath of string
 
 let GetRepositoryPath projectName = 
-    let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
+    let projectDir = Path.GetFullPath projectName |> Path.GetDirectoryName
     let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
     match settings.GetRepositoryPath() with
     | null -> RepositoryPath <| inferRepositoryDirectory projectDir
