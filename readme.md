@@ -1,4 +1,4 @@
-## Version 2.0 release
+## Version 3.0 release
 
 With breaking changes. Please check the [release notes](release_notes.md) 
 
