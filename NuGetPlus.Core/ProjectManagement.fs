@@ -252,13 +252,17 @@ let GetRestorePackages projectName =
         Path.Combine(Path.GetDirectoryName(projectName), "packages.config")
     if File.Exists packagesConfig then 
         use stream = File.OpenRead(packagesConfig)
-        XDocument.Load(stream).Element(XName.Get "packages")
-                 .Elements(XName.Get "package") 
-        |> Seq.map
-               (fun p -> 
-                   { Id = p.Attribute(XName.Get "id").Value;
-                     Version = 
-                         SemanticVersion(p.Attribute(XName.Get "version").Value) })
+        try
+            XDocument.Load(stream).Element(XName.Get "packages")
+                     .Elements(XName.Get "package") 
+            |> Seq.map
+                   (fun p -> 
+                       { Id = p.Attribute(XName.Get "id").Value;
+                         Version = 
+                             SemanticVersion(p.Attribute(XName.Get "version").Value) })
+        with
+        | e ->
+            failwithf "Sorry, there was error reading %s" packagesConfig
     else Seq.empty
 
 let UpdateReferenceToSpecificVersion projectName packageId 
