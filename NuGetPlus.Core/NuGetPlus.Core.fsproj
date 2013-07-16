@@ -8,7 +8,7 @@
     <ProjectGuid>fdc4bdd6-b4a4-44ef-8127-e90b8d09c54e</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>ReferenceUpdater</RootNamespace>
-    <AssemblyName>NuGetPlus.ReferenceUpdater</AssemblyName>
+    <AssemblyName>NuGetPlus.Core</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>NuGetPlus.Core</Name>
     <TargetFrameworkProfile />
