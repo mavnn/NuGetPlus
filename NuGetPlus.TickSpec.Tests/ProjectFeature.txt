@@ -109,3 +109,16 @@ Scenario outline: Installing packages with dependencies works even if they're ca
 	| FsProj		| no packages		|
 	| CsProj		| packages			|
 	| CsProj		| no packages		|
+
+Scenario outline: Installing packages with framework dependencies should add them
+	Given a <project type> with <existing packages>
+	When I install NuGetPlus.Core
+	Then Microsoft.Build should be added to the project file
+	And Microsoft.Build.Framework should be added to the project file
+
+	Examples:
+	| project type	| existing packages	|
+	| FsProj		| packages			|
+	| FsProj		| no packages		|
+	| CsProj		| packages			|
+	| CsProj		| no packages		|

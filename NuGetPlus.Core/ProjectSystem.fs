@@ -25,8 +25,7 @@ type ProjectSystem(projectFile : string) =
         new Runtime.Versioning.FrameworkName(project.GetPropertyValue
                                                  ("TargetFrameworkMoniker"))
     
-    let GetReference path = 
-        let name = Path.GetFileNameWithoutExtension path
+    let GetReferenceByName name =
         project.GetItems("Reference")
         |> Seq.filter
                (fun i -> 
@@ -36,6 +35,10 @@ type ProjectSystem(projectFile : string) =
                (fun i -> 
                    AssemblyName(i.EvaluatedInclude)
                        .Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+
+    let GetReferenceByPath path = 
+        let name = Path.GetFileNameWithoutExtension path
+        GetReferenceByName name
     
     interface IProjectSystem with
         member x.TargetFramework with get () = framework
@@ -56,12 +59,12 @@ type ProjectSystem(projectFile : string) =
             project.Save()
         
         member x.ReferenceExists path = 
-            match GetReference path with
+            match GetReferenceByName path with
             | Some _ -> true
             | None -> false
         
-        member x.RemoveReference name = 
-            match GetReference name with
+        member x.RemoveReference path = 
+            match GetReferenceByPath path with
             | Some i -> 
                 project.RemoveItem(i) |> ignore
                 project.Save()

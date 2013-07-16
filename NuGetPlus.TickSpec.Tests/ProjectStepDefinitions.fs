@@ -128,7 +128,7 @@ let ``I update (\S*) to version (.*)$`` (packageId : string) (version : string) 
         (NuGet.SemanticVersion(version))
 
 [<When>]
-let ``I delete the (\S*) package`` (package : string) = 
+let ``I delete the (\S*) package``(package : string) = 
     let packagesDir = 
         DirectoryInfo
             (Path.Combine(state.project.Directory.FullName, "packages"))
@@ -175,10 +175,15 @@ let ``(the package|\S*) (should|should not) be installed in the (right|shared) d
         | _ -> failwith "Unknown should option"
 
 [<Then>]
-let ``the reference (should|should not) be added to the project file``(should : string) = 
+let ``(the reference|\S*) (should|should not) be added to the project file`` (reference : string) 
+    (should : string) = 
+    let referenceName = 
+        match reference with
+        | "the reference" -> state.package
+        | s -> s
     let content = 
         using (state.project.OpenText()) (fun proj -> proj.ReadToEnd())
-    content.Contains(state.package) |> match should with
+    content.Contains(referenceName) |> match should with
                                        | "should" -> Assert.IsTrue
                                        | "should not" -> Assert.IsFalse
                                        | _ -> failwith "Unknown should option"
