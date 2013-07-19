@@ -1,4 +1,4 @@
-﻿[<TickSpec.StepScope(Feature = "Solution level operations should work")>]
+﻿[<TickSpec.StepScope(Feature = "Batch operations should work")>]
 module NuGetPlus.TickSpec.Tests.SolutionStepDefinitions
 
 open FsUnit
@@ -7,6 +7,7 @@ open NUnit.Framework
 open System
 open System.IO
 open Microsoft.Build.Evaluation
+open NuGetPlus
 open NuGetPlus.SolutionManagement
 open NuGet
 
@@ -92,9 +93,16 @@ let ``I ask for the project list``() =
     state <- { state with ProjectList = GetProjects state.Solution.FullName }
 
 [<When>]
-let ``I restore`` () =
-    let solution = state.Solution
-    RestorePackages <| solution.FullName
+let ``I restore($| the directory)`` (directory : string) =
+    match directory with
+    | " the directory" ->
+        let dir = state.Solution.DirectoryName
+        DirectoryManagement.RestorePackages dir
+    | "" ->
+        let solution = state.Solution
+        RestorePackages <| solution.FullName
+    | _ ->
+        failwith "I don't know what you wanted me to do!"
 
 [<Then>]
 let ``the project list should contain (.*)``(projectName : string) = 

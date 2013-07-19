@@ -27,4 +27,4 @@ type ProjectFixture() =
     inherit FeatureFixture("ProjectFeature.txt")
 
 type SolutionFixture() = 
-    inherit FeatureFixture("SolutionFeature.txt")
+    inherit FeatureFixture("BatchFeature.txt")

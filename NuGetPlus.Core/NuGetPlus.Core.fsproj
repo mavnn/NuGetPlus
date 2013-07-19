@@ -53,7 +53,9 @@
     <Compile Include="ProjectSystem.fs" />
     <Compile Include="RepositoryManagement.fs" />
     <Compile Include="ProjectManagement.fs" />
+    <Compile Include="BatchOperations.fs" />
     <Compile Include="SolutionManagement.fs" />
+    <Compile Include="DirectoryManagement.fs" />
     <None Include="packages.config" />
     <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
