@@ -14,10 +14,21 @@ type RepositoryInfo =
       Manager : PackageManager;
       Queue : BlockingCollection<RestorePackage> }
 
+let ScanPackages packages = 
+    packages
+    |> Seq.groupBy(fun p -> p.Id)
+    |> Seq.map(fun (id, packages) -> 
+               (id, 
+                packages
+                |> Seq.map(fun p -> p.Version)
+                |> Seq.distinct
+                |> Seq.sort))
+    |> Seq.filter(fun (id, versions) -> Seq.length versions > 1)
+
 let RestorePackages packages = 
     let repositories = 
         packages
-        |> Seq.map(fun (repoPath, _) -> repoPath)
+        |> Set.map(fun (repoPath, _) -> repoPath)
         |> Set.ofSeq
     let counter = ref(Set.count packages)
     let lockCounter = obj()

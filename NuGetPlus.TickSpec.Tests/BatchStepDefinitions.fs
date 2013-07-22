@@ -13,11 +13,13 @@ open NuGet
 
 type State = 
     { Solution : FileInfo;
-      ProjectList : seq<string> }
+      ProjectList : seq<string>;
+      ScanResults : seq<string * seq<SemanticVersion>> }
 
 let mutable state = 
     { Solution = FileInfo(".");
-      ProjectList = Seq.empty }
+      ProjectList = Seq.empty
+      ScanResults = Seq.empty }
 
 [<AfterScenario>]
 let TearDownScenario() = 
@@ -104,6 +106,10 @@ let ``I restore($| the directory)`` (directory : string) =
     | _ ->
         failwith "I don't know what you wanted me to do!"
 
+[<When>]
+let ``I scan the solution`` () =
+    state <- { state with ScanResults = state.Solution.FullName |> Scan }
+
 [<Then>]
 let ``the project list should contain (.*)``(projectName : string) = 
     state.ProjectList
@@ -123,3 +129,11 @@ let ``the local repository should contain (.*) (.*)`` (package : string) (versio
     let localRepo = SharedPackageRepository(packagesDir.FullName)
     let ok, _ = localRepo.TryFindPackage(package, SemanticVersion(version))
     ok |> should be True
+
+[<Then>]
+let ``it should report multiple versions of (.*)`` (id : string) =
+    state.ScanResults |> Seq.map (fun (id, _) -> id) |> should contain id
+
+[<Then>]
+let ``it should not report multiple versions of (.*)`` (id : string) =
+    state.ScanResults |> Seq.map (fun (id, _) -> id) |> should not' (contain id)

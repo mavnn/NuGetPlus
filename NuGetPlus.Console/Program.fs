@@ -15,8 +15,8 @@ type Argument =
         member s.Usage = 
             match s with
             | Action _ -> 
-                "Specify an action: Install, Remove, Restore or Update"
-            | File _ -> "Path to project/solution file to update."
+                "Specify an action: Scan, Install, Remove, Restore, Update or SolutionRestore"
+            | File _ -> "Path to project/solution file."
             | PackageId _ -> "NuGet package id for action."
             | Version _ -> "Optional specific version of package."
 
@@ -25,6 +25,7 @@ type ActionType =
     | Remove
     | Restore
     | Update
+    | Scan
     | SolutionRestore
 
 let processAction(a : string) = 
@@ -34,9 +35,10 @@ let processAction(a : string) =
     | "restore" -> Restore
     | "update" -> Update
     | "solutionrestore" -> SolutionRestore
+    | "scan" -> Scan
     | _ -> 
         failwith 
-            "Invalid Action; please use install, remove, restore, update or solutionrestore."
+            "Invalid Action; please use scan, install, remove, restore, update or solutionrestore."
 
 let processProjectFile(f : string) = 
     match IO.File.Exists(f) with
@@ -95,6 +97,14 @@ let main argv =
                     "PackageId provided for solution restore action - restore will always restore the whole solution."
             | None -> ()
             SolutionManagement.RestorePackages file
+        | Scan ->
+            match maybePackage with
+            | Some package -> 
+                failwith 
+                    "Scan takes only a solution file as a parameter."
+            | None -> ()
+            SolutionManagement.Scan file
+            |> Seq.iter (fun (id, versions) -> printfn "Package %s has multiple versions: %A" id (Seq.toList versions))
         0
     with
     | ex -> 

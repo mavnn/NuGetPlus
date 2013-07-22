@@ -33,3 +33,8 @@ let GetRestorePackages sln =
 let RestorePackages sln = 
     let packages = GetRestorePackages sln |> Set.ofSeq
     BatchOperations.RestorePackages packages
+
+let Scan =
+    GetRestorePackages
+    >> Seq.map (fun (_, p) -> p)
+    >> BatchOperations.ScanPackages

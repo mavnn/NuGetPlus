@@ -31,17 +31,24 @@ Scenario: Restoring a directory should restore packages
 	When I restore the directory
 	Then the local repository should contain Ninject 3.0.1.10
 
-Scenario: Restoring a solution with several projects should restore all the packages
+Scenario: Restoring a directory with several projects should restore all the packages
 	Given a solution called MixedType.Solution.sln
 	When I restore the directory
 	Then the local repository should contain Ninject 3.0.1.10
 	And the local repository should contain jQuery 2.0.2
 	And the local repository should contain Newtonsoft.Json 5.0.6
 
-Scenario: Restoring twice shouldn't error
+Scenario: Restoring a directory twice shouldn't error
 	Given a solution called MixedType.Solution.sln
 	When I restore the directory
 	And I restore the directory
 	Then the local repository should contain Ninject 3.0.1.10
 	And the local repository should contain jQuery 2.0.2
 	And the local repository should contain Newtonsoft.Json 5.0.6
+
+Scenario: Scanning a solution should detect multiple versions of the same package
+	Given a solution called MixedType.Solution.sln
+	When I scan the solution
+	Then it should report multiple versions of Newtonsoft.Json
+	And it should not report multiple versions of jQuery
+	
