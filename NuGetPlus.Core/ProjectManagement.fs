@@ -93,9 +93,11 @@ let private RemoveFilesFromProj packageInstallPath (package : IPackage)
                                   (Path.GetExtension contentFile.EffectivePath))
                 |> Seq.distinctBy
                        (fun contentFile -> 
-                           contentFile.EffectivePath, 
-                           contentFile.TargetFramework.Version), 
-                
+                           let path =
+                                if String.IsNullOrEmpty contentFile.EffectivePath then "" else contentFile.EffectivePath
+                           let version =
+                                if contentFile.TargetFramework <> null then contentFile.TargetFramework.Version else Version()
+                           path, version), 
                 Seq.distinctBy 
                     (fun (buildFile : IPackageFile) -> 
                         buildFile.EffectivePath, 
