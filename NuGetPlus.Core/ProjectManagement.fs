@@ -45,6 +45,7 @@ let private getFiles project (package : IPackage) =
             "framework assemblies"
     let contentFiles = 
         grabCompatible project (package.GetContentFiles) "content files"
+        |> Seq.filter (fun p -> p.EffectivePath <> null && p.TargetFramework <> null)
     let buildFiles = 
         grabCompatible project (package.GetBuildFiles) "build files"
     assemblyReferences, frameworkReferences, contentFiles, buildFiles
@@ -208,6 +209,17 @@ let private UninstallFromPackagesConfigFile id (project : IProjectSystem) =
            configDoc.Element(XName.Get "packages") |> DeletePackageNode id
            SortPackages configDoc
            project.AddFile(fileName, fun (s : Stream) -> configDoc.Save(s))
+
+let HasReferenceToPackage id project =
+    let config = Path.Combine(Path.GetDirectoryName project, "packages.config")
+    if File.Exists config then
+        File.ReadAllText(config)
+        |> XDocument.Parse
+        |> (fun configDoc ->
+                configDoc.Element(XName.Get "packages").Elements()
+                |> Seq.exists (fun x -> x.Attribute(XName.Get "id") <> null && x.Attribute(XName.Get "id").Value = id))
+    else
+        false
 
 let private InstallToPackagesConfigFile (package : IPackage) 
     (project : IProjectSystem) = 
