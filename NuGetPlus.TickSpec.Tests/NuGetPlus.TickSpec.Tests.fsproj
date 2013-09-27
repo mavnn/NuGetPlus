@@ -40,8 +40,8 @@
     <Compile Include="TestUtilities.fs" />
     <Compile Include="ProjectStepDefinitions.fs" />
     <Content Include="ProjectFeature.txt" />
-    <Compile Include="SolutionStepDefinitions.fs" />
-    <Content Include="SolutionFeature.txt" />
+    <Compile Include="BatchStepDefinitions.fs" />
+    <Content Include="BatchFeature.txt" />
     <Compile Include="Fixtures.fs" />
     <None Include="app.config" />
   </ItemGroup>

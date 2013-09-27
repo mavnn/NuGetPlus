@@ -1,4 +1,4 @@
-﻿[<TickSpec.StepScope(Feature = "Solution level operations should work")>]
+﻿[<TickSpec.StepScope(Feature = "Batch operations should work")>]
 module NuGetPlus.TickSpec.Tests.SolutionStepDefinitions
 
 open FsUnit
@@ -7,16 +7,19 @@ open NUnit.Framework
 open System
 open System.IO
 open Microsoft.Build.Evaluation
+open NuGetPlus
 open NuGetPlus.SolutionManagement
 open NuGet
 
 type State = 
     { Solution : FileInfo;
-      ProjectList : seq<string> }
+      ProjectList : seq<string>;
+      ScanResults : seq<string * seq<SemanticVersion>> }
 
 let mutable state = 
     { Solution = FileInfo(".");
-      ProjectList = Seq.empty }
+      ProjectList = Seq.empty
+      ScanResults = Seq.empty }
 
 [<AfterScenario>]
 let TearDownScenario() = 
@@ -92,9 +95,20 @@ let ``I ask for the project list``() =
     state <- { state with ProjectList = GetProjects state.Solution.FullName }
 
 [<When>]
-let ``I restore`` () =
-    let solution = state.Solution
-    RestorePackages <| solution.FullName
+let ``I restore($| the directory)`` (directory : string) =
+    match directory with
+    | " the directory" ->
+        let dir = state.Solution.DirectoryName
+        DirectoryManagement.RestorePackages dir
+    | "" ->
+        let solution = state.Solution
+        RestorePackages <| solution.FullName
+    | _ ->
+        failwith "I don't know what you wanted me to do!"
+
+[<When>]
+let ``I scan the solution`` () =
+    state <- { state with ScanResults = state.Solution.FullName |> Scan }
 
 [<Then>]
 let ``the project list should contain (.*)``(projectName : string) = 
@@ -115,3 +129,11 @@ let ``the local repository should contain (.*) (.*)`` (package : string) (versio
     let localRepo = SharedPackageRepository(packagesDir.FullName)
     let ok, _ = localRepo.TryFindPackage(package, SemanticVersion(version))
     ok |> should be True
+
+[<Then>]
+let ``it should report multiple versions of (.*)`` (id : string) =
+    state.ScanResults |> Seq.map (fun (id, _) -> id) |> should contain id
+
+[<Then>]
+let ``it should not report multiple versions of (.*)`` (id : string) =
+    state.ScanResults |> Seq.map (fun (id, _) -> id) |> should not' (contain id)

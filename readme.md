@@ -20,10 +20,12 @@ There is a blog post that contains [more explaination on the project aims](http:
 
 ## Command line options available for ngp.exe
 
-    --action <string>: Specify an action: Install, Remove, Restore, Update and SolutionRestore
+    --action <string>: Specify an action: Scan, Install, Remove, Restore, Update or SolutionRestore
     --file <string>: Path to project or solution file to update.
     --packageid <string>: NuGet package id for action.
     --version <string>: Optional specific version of package.
+
+Scan lists any packages in a solution where more than one version is installed.
 
 ## Call the same logic easily from code
 
@@ -56,6 +58,7 @@ let solutionName = "mySolution.fs"
 open NuGetPlus.SolutionManagement
 
 RestorePackages solutionName
+Scan solutionName
 ```
 
 Depending on the number of projects in your solution, this can be significantly faster (an order of magnitude or more) than restoring each packages.config in turn.
