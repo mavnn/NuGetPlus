@@ -1,6 +1,6 @@
-## Version 3.0 release
+## Version 3.1 release
 
-With breaking changes. Please check the [release notes](release_notes.md) 
+Please check the [release notes](release_notes.md) 
 
 ## Repeatable NuGet actions
 
