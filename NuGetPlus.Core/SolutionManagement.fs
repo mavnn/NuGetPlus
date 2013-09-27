@@ -15,6 +15,7 @@ let GetProjects sln =
     let lines = File.ReadAllLines(sln)
     lines
     |> Seq.filter(fun line -> line.StartsWith("Project"))
+    |> Seq.filter ProjectExtractor.IsMatch
     |> Seq.map
            (fun line -> 
                Path.Combine
