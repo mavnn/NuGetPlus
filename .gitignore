@@ -42,3 +42,4 @@ TestResults.xml
 *.received.xml
 output/
 TestResult.xml
+_NCrunch_*

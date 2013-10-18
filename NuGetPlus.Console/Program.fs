@@ -15,7 +15,7 @@ type Argument =
         member s.Usage = 
             match s with
             | Action _ -> 
-                "Specify an action: Scan, Install, Remove, Restore, Update or SolutionRestore"
+                "Specify an action: Scan, Install, Remove, Restore, Update, SolutionRestore or SolutionUpdate"
             | File _ -> "Path to project/solution file."
             | PackageId _ -> "NuGet package id for action."
             | Version _ -> "Optional specific version of package."
@@ -27,6 +27,7 @@ type ActionType =
     | Update
     | Scan
     | SolutionRestore
+    | SolutionUpdate
 
 let processAction(a : string) = 
     match a.ToLower() with
@@ -35,10 +36,11 @@ let processAction(a : string) =
     | "restore" -> Restore
     | "update" -> Update
     | "solutionrestore" -> SolutionRestore
+    | "solutionupdate" -> SolutionUpdate
     | "scan" -> Scan
     | _ -> 
         failwith 
-            "Invalid Action; please use scan, install, remove, restore, update or solutionrestore."
+            "Invalid Action; please use scan, install, remove, restore, update, solutionrestore or solutionupdate."
 
 let processProjectFile(f : string) = 
     match IO.File.Exists(f) with
@@ -97,6 +99,12 @@ let main argv =
                     "PackageId provided for solution restore action - restore will always restore the whole solution."
             | None -> ()
             SolutionManagement.RestorePackages file
+        | SolutionUpdate ->
+            match version with
+            | None -> SolutionManagement.UpdateReference file (checkPackage maybePackage)
+            | Some v -> 
+                SolutionManagement.UpdateReferenceToSpecificVersion file
+                    (checkPackage maybePackage) v
         | Scan ->
             match maybePackage with
             | Some package -> 

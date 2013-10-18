@@ -39,3 +39,14 @@ let Scan =
     GetRestorePackages
     >> Seq.map (fun (_, p) -> p)
     >> BatchOperations.ScanPackages
+
+let UpdateReference sln packageId =
+    GetProjects(Path.GetFullPath sln)
+    |> Seq.filter (ProjectManagement.HasReferenceToPackage packageId)
+    |> Seq.iter (fun proj -> ProjectManagement.UpdateReference proj packageId)
+
+let UpdateReferenceToSpecificVersion sln packageId version =
+    GetProjects(Path.GetFullPath sln)
+    |> Seq.filter (ProjectManagement.HasReferenceToPackage packageId)
+    |> Seq.iter (fun proj -> ProjectManagement.UpdateReferenceToSpecificVersion proj packageId version)
+
