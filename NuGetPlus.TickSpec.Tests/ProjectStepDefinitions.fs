@@ -37,7 +37,7 @@ let TearDownScenario() =
             with
             | _ -> 
                 Threading.Thread.Sleep(200)
-                dir.Delete(true)
+                if dir.Exists then dir.Delete(true)
         dir.Create()
     CleanDir workingDir
     CleanDir packagesDir
@@ -160,7 +160,7 @@ let ``(the package|\S*) (should|should not) be installed in the (right|shared) d
             match state.expectedVersion with
             | None -> 
                 packagesDir.GetDirectories() 
-                |> Seq.exists(fun di -> di.Name.StartsWith state.package)
+                |> Seq.exists(fun di -> di.Name.StartsWith(state.package, StringComparison.CurrentCultureIgnoreCase))
             | Some version -> 
                 packagesDir.GetDirectories() 
                 |> Seq.exists(fun di -> di.Name = packageName + "." + version)
