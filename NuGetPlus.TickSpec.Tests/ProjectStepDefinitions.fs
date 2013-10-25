@@ -181,12 +181,17 @@ let ``(the reference|\S*) (should|should not) be added to the project file`` (re
         match reference with
         | "the reference" -> state.package
         | s -> s
-    let content = 
-        using (state.project.OpenText()) (fun proj -> proj.ReadToEnd())
-    content.Contains(referenceName) |> match should with
-                                       | "should" -> Assert.IsTrue
-                                       | "should not" -> Assert.IsFalse
-                                       | _ -> failwith "Unknown should option"
+
+    let content = projectReferences state.project
+
+    let errMsg() = sprintf "\nExpected to find reference to '%s'\nActual rerfrences:\n'%s'" referenceName (String.Join("', '", content))
+    
+    content 
+    |> Seq.exists(fun c -> c.Equals(referenceName, StringComparison.CurrentCultureIgnoreCase))
+    |> match should with
+        | "should" -> fun b -> Assert.IsTrue(b, errMsg())
+        | "should not" -> fun b -> Assert.IsFalse(b, errMsg())
+        | _ -> failwith "Unknown should option"
 
 [<Then>]
 let ``the package (should|should not) be added to the packages.config file``(should : string) = 
