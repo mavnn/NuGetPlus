@@ -1,4 +1,4 @@
-## Version 3.1 release
+## Version 3.2 release
 
 Please check the [release notes](release_notes.md) 
 
