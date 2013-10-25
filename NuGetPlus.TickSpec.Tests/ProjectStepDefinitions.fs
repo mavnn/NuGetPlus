@@ -37,7 +37,7 @@ let TearDownScenario() =
             with
             | _ -> 
                 Threading.Thread.Sleep(200)
-                dir.Delete(true)
+                if dir.Exists then dir.Delete(true)
         dir.Create()
     CleanDir workingDir
     CleanDir packagesDir
@@ -160,7 +160,7 @@ let ``(the package|\S*) (should|should not) be installed in the (right|shared) d
             match state.expectedVersion with
             | None -> 
                 packagesDir.GetDirectories() 
-                |> Seq.exists(fun di -> di.Name.StartsWith state.package)
+                |> Seq.exists(fun di -> di.Name.StartsWith(state.package, StringComparison.CurrentCultureIgnoreCase))
             | Some version -> 
                 packagesDir.GetDirectories() 
                 |> Seq.exists(fun di -> di.Name = packageName + "." + version)
@@ -181,12 +181,17 @@ let ``(the reference|\S*) (should|should not) be added to the project file`` (re
         match reference with
         | "the reference" -> state.package
         | s -> s
-    let content = 
-        using (state.project.OpenText()) (fun proj -> proj.ReadToEnd())
-    content.Contains(referenceName) |> match should with
-                                       | "should" -> Assert.IsTrue
-                                       | "should not" -> Assert.IsFalse
-                                       | _ -> failwith "Unknown should option"
+
+    let content = projectReferences state.project
+
+    let errMsg() = sprintf "\nExpected to find reference to '%s'\nActual rerfrences:\n'%s'" referenceName (String.Join("', '", content))
+    
+    content 
+    |> Seq.exists(fun c -> c.Equals(referenceName, StringComparison.CurrentCultureIgnoreCase))
+    |> match should with
+        | "should" -> fun b -> Assert.IsTrue(b, errMsg())
+        | "should not" -> fun b -> Assert.IsFalse(b, errMsg())
+        | _ -> failwith "Unknown should option"
 
 [<Then>]
 let ``the package (should|should not) be added to the packages.config file``(should : string) = 

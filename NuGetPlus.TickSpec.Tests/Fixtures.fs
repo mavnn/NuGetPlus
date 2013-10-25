@@ -17,8 +17,11 @@ type FeatureFixture(source : string) =
     member this.TestScenario(scenario : Scenario) = 
         if scenario.Tags |> Seq.exists((=) "ignore") then 
             raise(new IgnoreException("Ignored: " + scenario.Name))
-        scenario.Action.Invoke()
-    
+        try 
+            scenario.Action.Invoke()
+        with
+        | ex as TargetInvocationException -> raise ex.InnerException 
+
     member this.Scenarios = 
         let s = File.OpenText(Path.Combine(@"..\..\", source))
         definitions.GenerateScenarios(source, s)

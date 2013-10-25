@@ -66,6 +66,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="TickSpec">
       <HintPath>..\packages\TickSpec.1.0.0.1\Lib\net40\TickSpec.dll</HintPath>

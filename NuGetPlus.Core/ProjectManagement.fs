@@ -14,21 +14,20 @@ let inline private grabCompatible (project : IProjectSystem) f name =
     | (true, result) -> result
     | (false, _) -> Seq.empty
 
-let private getFilteredAssemblies (package : IPackage) 
-    (project : IProjectSystem) assemblyReferences = 
+let private getFilteredAssemblies (package : IPackage) (project : IProjectSystem) assemblyReferences = 
     match package.PackageAssemblyReferences with
     | null -> assemblyReferences
+    | x when (Seq.isEmpty x) -> assemblyReferences
     | par -> 
         match project.TryGetCompatibleItems(par) with
         | (true, items) -> 
             Seq.filter 
                 (fun (assembly : IPackageAssemblyReference) -> 
-                    not 
-                    <| Seq.exists 
-                           (fun (pr : PackageReferenceSet) -> 
-                               pr.References.Contains
-                                   (assembly.Name, 
-                                    StringComparer.OrdinalIgnoreCase)) items) 
+                    Seq.exists
+                        (fun (pr : PackageReferenceSet) -> 
+                            pr.References.Contains
+                                (assembly.Name, 
+                                StringComparer.OrdinalIgnoreCase)) items) 
                 assemblyReferences
         | (false, _) -> assemblyReferences
 
@@ -38,7 +37,7 @@ let private fileTransformers : IDictionary<string, IPackageFileTransformer> =
 
 let private getFiles project (package : IPackage) = 
     let assemblyReferences = 
-        grabCompatible project (fun () -> package.AssemblyReferences) 
+        grabCompatible project (fun () -> package.AssemblyReferences)
             "assembly references"
     let frameworkReferences = 
         grabCompatible project (fun () -> package.FrameworkAssemblies) 
