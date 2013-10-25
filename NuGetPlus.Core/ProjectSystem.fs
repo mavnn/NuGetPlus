@@ -21,9 +21,13 @@ type ProjectSystem(projectFile : string) =
         | None -> Project(projectFile)
     
     let projectName = Path.GetFileNameWithoutExtension <| project.FullPath
+    let frameworkName =
+        match project.GetPropertyValue("TargetFrameworkMoniker") with
+        | s when String.IsNullOrEmpty s ->
+            sprintf ".NET Framework, Version=%s" <| project.GetPropertyValue("TargetFrameworkVersion")
+        | s -> s
     let framework = 
-        new Runtime.Versioning.FrameworkName(project.GetPropertyValue
-                                                 ("TargetFrameworkMoniker"))
+        Runtime.Versioning.FrameworkName(frameworkName)
     
     let GetReferenceByName name =
         project.GetItems("Reference")
