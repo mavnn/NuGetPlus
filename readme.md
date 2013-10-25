@@ -20,7 +20,7 @@ There is a blog post that contains [more explaination on the project aims](http:
 
 ## Command line options available for ngp.exe
 
-    --action <string>: Specify an action: Scan, Install, Remove, Restore, Update or SolutionRestore
+    --action <string>: Specify an action: Scan, Install, Remove, Restore, Update, SolutionRestore or SolutionUpdate
     --file <string>: Path to project or solution file to update.
     --packageid <string>: NuGet package id for action.
     --version <string>: Optional specific version of package.
@@ -54,11 +54,17 @@ Methods available in SolutionManagement are:
 ```fsharp
 // This is F# code but the dll can be referenced from other .net languages too.
 let solutionName = "mySolution.fs"
+let packageName = "myPackage"
+let packageVersion = NuGet.SemanticVersion("10.0.2.0")
 
 open NuGetPlus.SolutionManagement
 
 RestorePackages solutionName
 Scan solutionName
+UpdateReference solutionName packageName
+UpdateReferenceToSpecificVersion solutionName packageName packageVersion
+(* This may update dependencies to version you were not expecting -
+use with caution! *)
 ```
 
 Depending on the number of projects in your solution, this can be significantly faster (an order of magnitude or more) than restoring each packages.config in turn.

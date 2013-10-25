@@ -1,3 +1,13 @@
+## Version 3.2.0
+
+New features:
+
+*	Added SolutionUpdate command (and matching SolutionManagement.Update* methods)
+
+Bug fixes:
+
+*	List on [the NuGetPlus YouTrack instance](http://nugetplus.myjetbrains.com/youtrack/issues?q=fixed+in%3A+3.2.0)
+
 ## Version 3.1.0
 
 New features:
