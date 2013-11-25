@@ -45,16 +45,24 @@ let TearDownScenario() =
                package = "";
                expectedVersion = None }
 
-let constructWorkingProject projType hasPackages destinationDir shared = 
-    let midFix = 
-        match hasPackages with
-        | "packages" -> ".WithPackages."
-        | "no packages" -> ".NoPackages."
-        | _ -> failwith "Unknown package option"
+type MidFix =
+    | HasPackages of string
+    | VisualStudioVersion of string
+
+let constructWorkingProject projType midFix destinationDir shared = 
+    let midFixString = 
+        match midFix with
+        | HasPackages hasPackages ->
+            match hasPackages with
+            | "packages" -> ".WithPackages."
+            | "no packages" -> ".NoPackages."
+            | _ -> failwith "Unknown package option"
+        | VisualStudioVersion version ->
+            "." + version + "."
     let example = 
         testProjectDir.GetFiles("*.*", SearchOption.AllDirectories)
         |> Seq.filter
-               (fun fi -> fi.Name = projType + midFix + (projType.ToLower()))
+               (fun fi -> fi.Name = projType + midFixString + (projType.ToLower()))
         |> Seq.head
     ensureWorkingDirectory()
     let destination = Path.Combine(destinationDir, example.Name)
@@ -85,13 +93,19 @@ let ``a (\w*) with (packages|no packages)`` (projType : string)
     (hasPackages : string) = 
     let destinationDir = 
         Path.Combine(workingDir.FullName, Guid.NewGuid().ToString())
-    constructWorkingProject projType hasPackages destinationDir false
+    constructWorkingProject projType (HasPackages hasPackages) destinationDir false
+
+[<Given>]
+let ``a (\w*) (\w*) Visual Studio package`` (projType : string) (version : string) =
+    let destinationDir =
+        Path.Combine(workingDir.FullName, Guid.NewGuid().ToString())
+    constructWorkingProject projType (VisualStudioVersion version) destinationDir false
 
 [<Given>]
 let ``a (|restored )(\w*) (\w*) with (packages|no packages)`` (restored : string) 
     (ordinal : string) (projType : string) (hasPackages : string) = 
     let destinationDir = Path.Combine(workingDir.FullName, ordinal)
-    constructWorkingProject projType hasPackages destinationDir true
+    constructWorkingProject projType (HasPackages hasPackages) destinationDir true
     if restored = "restored " then RestoreReferences state.project.FullName
 
 [<When>]

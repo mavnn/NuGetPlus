@@ -124,3 +124,13 @@ Scenario outline: Installing packages with framework dependencies should add the
 	| FsProj		| no packages		|
 	| CsProj		| packages			|
 	| CsProj		| no packages		|
+
+
+Scenario outline: VS2013 projects do not contain a Framework Moniker, but should still load.
+	Given a <project type> <version> Visual Studio package
+	When I install <package>
+	Then <package> should be added to the project file
+
+	Examples:
+	| project type | version | package |
+	| CsProj       | VS2013  | Ninject |
