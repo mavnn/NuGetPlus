@@ -24,8 +24,7 @@ let GetRepositoryPath projectName =
     | null -> RepositoryPath <| inferRepositoryDirectory projectDir
     | s -> RepositoryPath s
 
-let GetRawManager(repoPath : RepositoryPath) (settings : ISettings) = 
-    let (RepositoryPath repositoryPath) = repoPath
+let private getManager (RepositoryPath repositoryPath) (settings : ISettings) local = 
     if String.IsNullOrWhiteSpace repositoryPath then 
         raise <| ArgumentException("Repository Path cannot be empty")
     printfn "repo path: %s" repositoryPath
@@ -34,7 +33,7 @@ let GetRawManager(repoPath : RepositoryPath) (settings : ISettings) =
         PackageSourceProvider(settings, [defaultPackageSource])
     let remoteRepository = 
         packageSourceProvider.GetAggregate(PackageRepositoryFactory())
-    let localRepository = SharedPackageRepository repositoryPath
+    let localRepository = local repositoryPath
     let logger = 
         { new ILogger with
               member x.Log(level, message, parameters) = 
@@ -49,6 +48,12 @@ let GetRawManager(repoPath : RepositoryPath) (settings : ISettings) =
              PhysicalFileSystem repositoryPath, localRepository)
     packageManager.Logger <- logger
     packageManager
+
+let GetRawManager repositoryPath settings = 
+    getManager repositoryPath settings (fun rp -> SharedPackageRepository(rp))
+
+let GetFlatManager repositoryPath settings =
+    getManager repositoryPath settings (fun rp -> LocalPackageRepository(DefaultPackagePathResolver(rp, false), PhysicalFileSystem(rp)))
 
 type RestorePackage = 
     { Id : string;

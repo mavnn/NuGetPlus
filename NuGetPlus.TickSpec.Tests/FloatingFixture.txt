@@ -1,0 +1,39 @@
+﻿Feature: Floating operations should work
+
+Scenario outline: Installing a package with versioned directory should work
+	Given a floating directory
+	When I install <package> with versioned directory
+	Then the package should be installed with a versioned directory
+
+	Examples:
+
+	| package |
+	| Ninject |
+
+Scenario outline: Installing a package with specific version should work
+	Given a floating directory
+	When I install <package>, version <version> with versioned directory
+	Then the package should be installed with a versioned directory
+
+	Examples:
+
+	| package | version  |
+	| Ninject | 3.0.1.10 |
+	| Ninject | 2.2.1.4  |
+
+Scenario: Installing a package with dependency should work
+	Given a floating directory
+	When I install Nuget.Core, version 2.7.2 with versioned directory
+	Then the package should be installed with a versioned directory
+	And it's dependency Microsoft.Web.Xdt should be installed
+
+Scenario: Installing a package with dependencies ignored should work
+	Given a floating directory
+	When I install Nuget.Core, version 2.7.2 with no dependencies and a versioned directory
+	Then the package should be installed with a versioned directory
+	And it's dependency Microsoft.Web.Xdt should not be installed
+
+Scenario: Installing a package without versioned directory
+	Given a floating directory
+	When I install Ninject with versioned directory
+	Then the package should be installed without a versioned directory

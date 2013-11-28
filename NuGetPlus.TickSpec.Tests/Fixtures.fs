@@ -31,3 +31,6 @@ type ProjectFixture() =
 
 type SolutionFixture() = 
     inherit FeatureFixture("BatchFeature.txt")
+
+type FloatingFixture() =
+    inherit FeatureFixture("FloatingFixture.txt")

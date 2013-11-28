@@ -56,6 +56,7 @@
     <Compile Include="BatchOperations.fs" />
     <Compile Include="SolutionManagement.fs" />
     <Compile Include="DirectoryManagement.fs" />
+    <Compile Include="Floating.fs" />
     <None Include="packages.config" />
     <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
