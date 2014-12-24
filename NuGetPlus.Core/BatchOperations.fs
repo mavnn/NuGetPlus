@@ -44,7 +44,7 @@ let RestorePackages packages =
                               <| Settings.LoadDefaultSettings
                                      (PhysicalFileSystem
                                           (match repo with
-                                           | RepositoryPath r -> r)));
+                                           | RepositoryPath r -> r), null, null));
                          Queue = new BlockingCollection<RestorePackage>() } map) 
                Map.empty
     packages 

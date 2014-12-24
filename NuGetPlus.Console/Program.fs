@@ -4,7 +4,7 @@ open System
 open NuGet
 open NuGetPlus
 open NuGetPlus.ProjectManagement
-open UnionArgParser
+open Nessos.UnionArgParser
 
 type Argument = 
     | Action of string
@@ -52,13 +52,13 @@ let processVersion(v : string) = SemanticVersion(v)
 [<EntryPoint>]
 let main argv = 
     try 
-        let parser = UnionArgParser<Argument>()
+        let parser = UnionArgParser.Create<Argument>()
         let results = parser.Parse()
-        let action = results.PostProcessResult <@ Action @> processAction
+        let action = results.PostProcessResult(<@ Action @>, processAction)
         let file = 
-            results.PostProcessResult <@ File @> processProjectFile
+            results.PostProcessResult(<@ File @>, processProjectFile)
         let maybePackage = results.TryGetResult <@ PackageId @>
-        let version = results.TryPostProcessResult <@ Version @> processVersion
+        let version = results.TryPostProcessResult (<@ Version @>, processVersion)
         printfn "Action type: %A" action
         printfn "File: %s" file
         match maybePackage with

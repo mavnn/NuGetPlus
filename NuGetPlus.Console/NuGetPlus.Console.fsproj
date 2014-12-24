@@ -45,7 +45,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="NuGet.Core">
-      <HintPath>..\packages\Nuget.Core.2.5.0\lib\net40-Client\NuGet.Core.dll</HintPath>
+      <HintPath>..\packages\Nuget.Core.2.8.2\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -53,8 +53,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UnionArgParser">
-      <HintPath>..\packages\UnionArgParser.0.5.2\lib\net45\UnionArgParser.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\UnionArgParser.0.8.2\lib\net40\UnionArgParser.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
