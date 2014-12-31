@@ -19,7 +19,7 @@ type RepositoryPath = | RepositoryPath of string
 
 let GetRepositoryPath projectName = 
     let projectDir = Path.GetFullPath projectName |> Path.GetDirectoryName
-    let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
+    let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir, null, null)
     match settings.GetRepositoryPath() with
     | null -> RepositoryPath <| inferRepositoryDirectory projectDir
     | s -> RepositoryPath s
@@ -33,7 +33,7 @@ let GetRawManager(repoPath : RepositoryPath) (settings : ISettings) =
     let packageSourceProvider = 
         PackageSourceProvider(settings, [defaultPackageSource])
     let remoteRepository = 
-        packageSourceProvider.GetAggregate(PackageRepositoryFactory())
+        packageSourceProvider.CreateAggregateRepository(PackageRepositoryFactory(), false)
     let localRepository = SharedPackageRepository repositoryPath
     let logger = 
         { new ILogger with

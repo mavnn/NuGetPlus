@@ -85,7 +85,7 @@ Scenario outline: Updating should work
 
 Scenario outline: Downgrading should work
 	Given a <project type> with <existing packages>
-	When I install Nuget.Core version 2.5.0
+	When I install Nuget.Core version 2.8.2
 	And I update NuGet.Core to version 2.2.0
 	Then the package should be installed in the right directory
 	And the reference should be added to the project file

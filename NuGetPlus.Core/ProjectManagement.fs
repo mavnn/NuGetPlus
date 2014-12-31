@@ -142,7 +142,10 @@ let private RemoveFilesFromProj packageInstallPath (package : IPackage)
                                                                
                                                                buildFile'.TargetFramework.Version)) 
                     b' |> not) b
-    project.DeleteFiles(contentFilesToDelete, otherPackages, fileTransformers)
+    
+    let mappedFileTransformers = fileTransformers |> Seq.map(fun (KeyValue(k,v)) -> new FileTransformExtensions(k, k), v)  |> dict
+         
+    project.DeleteFiles(contentFilesToDelete, otherPackages, mappedFileTransformers)
     assemblyReferencesToDelete 
     |> Seq.iter(fun a -> project.RemoveReference(a.Name))
     buildFilesToDelete
@@ -164,7 +167,8 @@ let private AddFilesToProj packageInstallPath package project =
             (project.TargetFramework.FullName) (package.GetFullName())
     let filteredAssemblyReferences = 
         getFilteredAssemblies package project assemblyReferences
-    project.AddFiles(contentFiles, fileTransformers)
+    let mappedFileTransformers = fileTransformers |> Seq.map(fun (KeyValue(k,v)) -> new FileTransformExtensions(k, k), v)  |> dict
+    project.AddFiles(contentFiles, mappedFileTransformers)
     frameworkReferences
     |> Seq.filter(fun f -> not <| project.ReferenceExists(f.AssemblyName))
     |> Seq.iter(fun f -> project.AddFrameworkReference(f.AssemblyName))
@@ -245,7 +249,7 @@ let private InstallToPackagesConfigFile (package : IPackage)
 
 let private GetManager projectName = 
     let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
-    let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
+    let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir,null,null)
     let packageManager = GetRawManager (GetRepositoryPath projectName) settings
     let project = ProjectSystem(projectName) :> IProjectSystem
     packageManager.PackageInstalling.Add
@@ -354,7 +358,7 @@ let InstallReference projectName packageId =
 
 let RestoreReferences projectName = 
     let projectDir = Path.GetFullPath <| IO.Path.GetDirectoryName projectName
-    let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir)
+    let settings = Settings.LoadDefaultSettings(PhysicalFileSystem projectDir, null, null)
     let manager = GetRawManager (GetRepositoryPath projectName) settings
     let packages = GetRestorePackages projectName
     packages 
